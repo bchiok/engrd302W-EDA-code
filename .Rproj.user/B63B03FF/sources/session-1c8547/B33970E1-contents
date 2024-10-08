@@ -1,0 +1,313 @@
+---
+title: "Lecture 7. join"
+author: "Heesun Yoo"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "C:/Users/bench/OneDrive/Desktop/QTM150")
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+
+```{r}
+
+# Toy datasets to use
+
+band <- tribble(
+   ~name,     ~band,
+  "Mick",  "Stones",
+  "John", "Beatles",
+  "Paul", "Beatles"
+)
+
+instrument <- tribble(
+    ~name,   ~plays,
+   "John", "guitar",
+   "Paul",   "bass",
+  "Keith", "guitar"
+)
+
+instrument2 <- tribble(
+    ~artist,   ~plays,
+   "John", "guitar",
+   "Paul",   "bass",
+  "Keith", "guitar"
+)
+
+band
+instrument
+instrument2
+
+# create the single dataset with three variables - name, band and instrument one plays. 
+```
+
+
+
+## Mutating joins
+
+### 1.  *left_join(x, y, by="key variable")*: keeps all the observations (rows) in x
+
+A key is a variable that exist in both dataset, allowing us to uniquely identify an observation, otherwise, we need multiple variables to identify an observation,
+
+```{r}
+## left_join(x, y, by="key variable") 
+
+## join y to x, x is the primary dataset
+## mutate new variables in x by copying different variables in y
+## return a new dataset
+
+## left_join(x, y, by=c("key variable1","key variable2")), matching based on key variable 1 and key variable 2 (both of them exist in x and y dataset)
+
+## left_join(x, y, by=c("key variable in x dataset"="key variable in y dataset")), matching based on one key variable (when key variable's name is different in two datasets)
+
+data1<-left_join(band, instrument, by="name")
+data1
+
+## use instrument2 
+data4<-left_join(band, instrument2, by=c("name"="artist"))
+
+```
+
+
+### 2. *right_join(x, y, by="")*: keep all the observations (rows) in y
+
+The opposite way of *left_join()*
+
+```{r}
+band
+instrument
+data2<-right_join(band,instrument, by="name")
+data2
+```
+
+
+
+```{r}
+data3<-right_join(instrument,band, by="name")
+data3
+
+#setequal()   #check whether two datasets are the same
+setequal(data1, data2)
+setequal(data1, data3)
+identical(data1, data3)
+```
+
+
+### 3. *inner_join()* keeps all the observations in **both** x and y
+
+An inner join keeps observations that appear in both tables. But unmatched rows are not included in the result, it is easy to lose observations.   
+
+```{r}
+inner_join(band, instrument, by="name")
+```
+
+
+### 4. *full join* keeps all observations in x and y
+
+An full join keeps observations that appear in either x or y.
+
+```{r}
+full_join(band, instrument, by="name")
+```
+
+![](joins.png)
+
+
+
+## Filtering joins 
+
+### 1. *semi_join(x,y, by="")* keeps all the observations of x that have a match in y
+
+use semi_join() to collect the artists in *band* that have instrument info in *instrument*.
+```{r}
+semi_join(band, instrument, by="name")
+
+## use semi_join() to collect the artists in *band* that have instrument info in *instrument*.
+
+```
+![](semi.png)
+
+
+### 2. *anti_join(x,y, by="")* drops all the observations of x that have a match in y.  *anti_join()* also provide a great way to diagnose joins that go wrong.
+
+```{r}
+anti_join(band, instrument, by="name")
+
+## Use an anti_join() to return the rows of artists for which you don't have any instrument info.
+```
+![](anti.png)
+
+
+
+### Set operations  (when two datasets contain the same variables and each variable is used in the key)
+
+
+```{r}
+# union(band, instrument)  # these two data sets have different variables 
+
+data1
+
+data2
+
+data3  <-tibble (name= c("John", "Paul", "Keith", "TAMMY"), band=c("Beatles", "Beatles", NA, NA), plays=c("guitar", "bass", "guitar","violin"))
+
+# data1 and data2 have the same variables
+union(data1, data2)
+union(data1, data2, data3) # can't work with three datasets
+
+# intersect(dataset1, dataset2)
+intersect(data1, data2)
+
+# setdiff(dataset1, dataset2)   observations in the dataset1 but not the dataset2
+setdiff(data2, data1)
+
+# setequal()  check two datasets with the same observations in any order
+# identical()  check two datasets with the same observations in the same order
+
+```
+
+```{r}
+#cbind()
+#rbind()
+
+#bind_cols()  
+#bind_rows()     # faster than rbind()  # return a tibble         
+                  # handle lists of data frames
+
+band1<- tribble(
+  ~name, ~surname,
+  "John", "Lennon",
+  "Paul", "McCartney",
+  "George", "Harrison",
+  "Ringo", "Starr"
+)
+
+band2<- tribble(
+   ~name,     ~surname,
+  "Mick",  "Jagger",
+  "Keith", "Richards",
+  "Charlie", "Watts",
+  "Ronnie", "Wood"
+)
+
+band1
+band2
+
+bind_rows(band1,band2)
+
+# add a new column to indicate which observations (rows) are from
+# bind_rows(label names for observations in new column, .id=column names for new column)
+bind_rows(Beatles=band1, Stones=band2, .id="band")
+# it is helpful to group datasets
+
+rbind(band1, band2)
+```
+
+
+
+
+
+
+#### Examples in nycflights13
+
+#### 1. Join relational datasets connected by key variables 
+
+```{r,eval=FALSE}
+# check out the package "nycflights13"
+
+flights # connects to 
+planes # via a single variable *tailnum*
+
+flights # connects to 
+airlines # through the *carrier* variable 
+
+flights # connects to 
+airports # via two variables *faa* and *dest*
+
+flights # connects to 
+weather # via *origin*, *year*, *month*, *day*, and *hour*
+
+```
+![](nycflights.png)
+
+
+Exercise 1: 
+
+How many flights in each carrier? 
+
+```{r, eval=TRUE} 
+
+
+```
+
+
+Exercise 2:
+
+Join the dataset "airports" and "flights" by the variables (key=c("dest"="faa")), and count how many airports in the dataset "airports" are also in the dataset "flights"?  (Hint: use n distinct() function to count.)
+
+```{r,eval=TRUE}
+
+```
+
+Exercise 3:
+
+What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?
+
+```{r}
+
+```
+
+Exercise 4: 
+
+Join airlines to flights and get which airlines had the largest average arrival delays?
+```{r}
+
+```
+
+Exercise 5:
+When connecting flights and planes, you might be interested to know that there are many flights that don’t have a match in planes:
+
+```{r}
+
+```
+
+```{r}
+avgtemp <- tibble(
+  City = c("New York", "Los Angeles", "Chicago", "Houston"),
+  '2018' = c(57, 64, 51, 68),
+  '2019' = c(58, 65, 53, 69),
+  '2020' = c(59, 64, 52, 70),
+  '2021' = c(58, 65, 52, 70),
+  '2022' = c(59, 66, 51, 69))
+
+avgtemp %>% 
+  pivot_longer(2:6, names_to="year", values_to="temp")
+
+
+books_info <- tibble(
+  BookID = c(1, 2, 3, 4, 5),
+  Title = c("The Great Gatsby", "Moby Dick", NA, "Pride and Prejudice", "To Kill a Mockingbird"))
+
+authors_info <- tibble(
+  BookID = c(3, 4, 5, 6, 7),
+  AuthorName = c("Herman Melville", NA, "Harper Lee", "J.K. Rowling", "George Orwell"))
+
+
+inner_join(books_info, authors_info, by="BookID")
+
+str(flights)
+flights$dest
+str(airports)
+airports$faa
+
+
+table1<-anti_join(flights, airports, by = c("dest" = "faa"))
+
+distinct(table1, carrier, dest)
+
+avgtemp %>%
+  pivot_longer(2:6, names_to="year", values_to="temp")
+```

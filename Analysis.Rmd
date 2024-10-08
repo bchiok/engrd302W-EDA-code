@@ -7,9 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("tidyverse")
 library(tidyverse)
-read_csv("data/policymaptest.csv")
+avghealthcarecost<-read_csv("data/policymaptest.csv")
 renv::snapshot
 
 ```
