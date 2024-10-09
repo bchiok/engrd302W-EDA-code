@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse, janitor)
+library(tidyverse, janitor, urbnmapr)
 
 # Do we need this?
 renv::snapshot
@@ -39,14 +39,16 @@ covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID
   rename(
     county = geo_id_name,
     state = sitsin_state,
+    county_fips = geo_id,
     avg_healthcarecost = totslf_avg,
     year = time_frame,
     avg_covidcases = pc_av7dy_2wk_cases,
     week_start = time_frame_2) %>% 
-  select("county","state", "geo_id", "avg_healthcarecost", "year", "avg_covidcases", "week_start") %>% 
+  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "week_start") %>% 
   drop_na() %>% 
   mutate(avg_healthcarecost = as.numeric(avg_healthcarecost),
          avg_covidcases = as.numeric(avg_covidcases))
+  
 covid_healthcare_costs
 
 ```
@@ -67,6 +69,28 @@ summary(covid_healthcare_costs$avg_covidcases)
 
 
 ```{r map}
+
+# install.packages("devtools")
+# devtools::install_github("UrbanInstitute/urbnmapr")
+# library(urbnmapr)
+
+
+
+us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = "county_fips") 
+
+us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = avg_healthcarecost)) +
+  geom_polygon(color = NA) +
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+
+us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = avg_covidcases)) +
+  geom_polygon(color = NA) +
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
 
 ```
 
