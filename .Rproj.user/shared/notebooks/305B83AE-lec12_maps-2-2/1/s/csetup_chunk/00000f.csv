@@ -1,0 +1,12 @@
+"0","knitr::opts_knit$set(root.dir = ""C:/Users/bench/OneDrive/Desktop/QTM150"")"
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","#install.packages(""maps"")"
+"0","#install.packages(""usdata"")"
+"0","#install.packages(""sf"")"
+"0","#install.packages(""viridis"")"
+"0",""
+"0",""
+"0","library(tidyverse)"
+"0","library(plotly)"
+"2","Error in library(plotly) : there is no package called ‘plotly’
+"

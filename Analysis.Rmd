@@ -8,10 +8,12 @@ output: html_document
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse, janitor, urbnmapr)
+install.packages("janitor")
+library(tidyverse, janitor)
 
 # Do we need this?
 renv::snapshot
+#No this is from when we did it in class
 
 ```
 
@@ -23,17 +25,18 @@ renv::snapshot
 
 ```{r downloading datasets}
 
-avghealthcarecost2022<-read_csv("data/policymaptest.csv")
+avghealthcarecost2022<-read.csv("data/policymaptest.csv")
 avghealthcarecost2022
-rate2021<-read_csv("data/covidrate2021.csv")
+rate2021<-read.csv("data/covidrate2021.csv")
 rate2021
 
 ```
 
 
 ```{r creating dataset}
+library(janitor)
 
-covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography Name", "Sits in State")) %>% 
+covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography.Name","Sits.in.State")) %>% 
   row_to_names(row_number = 1) %>% 
   clean_names() %>% 
   rename(
@@ -70,24 +73,50 @@ summary(covid_healthcare_costs$avg_covidcases)
 
 ```{r map}
 
-# install.packages("devtools")
-# devtools::install_github("UrbanInstitute/urbnmapr")
-# library(urbnmapr)
+##install.packages("devtools")
+##devtools::install_github("UrbanInstitute/urbnmapr")
+##library(urbnmapr)
+
+
+us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = c("county_fips")) 
+
+# mediancost<-median(us_covid_healthcare_costs$avg_healthcarecost, na.rm=T)
+# mediancaseincrease<-median(us_covid_healthcare_costs$avg_covidcases, na.rm=T)
+# standardized_us_covid_healthcare_costs <- us_covid_healthcare_costs %>% 
+#   mutate(standardhealthcarecost=((avg_healthcarecost-mediancost)/mediancost)*100,
+#          standardcaseincrease=((avg_covidcases-mediancaseincrease)/mediancaseincrease)*100)
 
 
 
-us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = "county_fips") 
+
+# standardized_us_covid_healthcare_costs %>%
+#   ggplot(aes(long, lat, group = group, fill = standardhealthcarecost)) +
+#   geom_polygon() +
+#   scale_fill_gradientn(colors=rev(rainbow(5)))+
+#   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+#   theme_void() +
+#   labs(fill = "")
+# 
+# standardized_us_covid_healthcare_costs %>%
+#   ggplot(aes(long, lat, group = group, fill = avg_covidcases)) +
+#   geom_polygon() +
+#   scale_fill_gradientn(colors=rev(rainbow(5)))+
+#   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+#   theme_void() +
+#   labs(fill = "")
 
 us_covid_healthcare_costs %>%
   ggplot(aes(long, lat, group = group, fill = avg_healthcarecost)) +
-  geom_polygon(color = NA) +
+  geom_polygon(color=NA) +
+  scale_fill_gradientn(colors=rev(rainbow(7)))+
   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
   theme_void() +
   labs(fill = "")
 
 us_covid_healthcare_costs %>%
   ggplot(aes(long, lat, group = group, fill = avg_covidcases)) +
-  geom_polygon(color = NA) +
+  geom_polygon(color=NA) +
+  scale_fill_gradientn(colors=rev(rainbow(7)))+
   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
   theme_void() +
   labs(fill = "")
