@@ -7,13 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(echo = TRUE)
-install.packages("janitor")
-library(tidyverse, janitor)
-
-# Do we need this?
-renv::snapshot
-#No this is from when we did it in class
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+pacman::p_load(tidyverse, janitor, urbnmapr)
 
 ```
 
@@ -21,20 +16,19 @@ renv::snapshot
 
 ## Introduction
 
-
+Our goal in this analysis is to examine how percent change in COVID-19 cases between December 31st, 2020 and January 14th, 2021 affected average annual dollars spent out of pocket per person on medical care in 2022. Specifically, how the cost of out of pocket medical care has been affected in counties with high COVID-19 cases. In this analysis, we will be utilizing two different datasets. The first is a dataset that describes the average annual dollars spent out of pocket per person on medical care in 2022. This information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). The second dataset describes the percent change in seven day rolling average of cases of COVID-19 14-day change between December 31st, 2020 and January 14th, 2021. This information is from the New York Times national database of COVID-19 cases and deaths.
 
 ```{r downloading datasets}
 
 avghealthcarecost2022<-read.csv("data/policymaptest.csv")
-avghealthcarecost2022
+head(avghealthcarecost2022)
 rate2021<-read.csv("data/covidrate2021.csv")
-rate2021
+head(rate2021)
 
 ```
 
 
 ```{r creating dataset}
-library(janitor)
 
 covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography.Name","Sits.in.State")) %>% 
   row_to_names(row_number = 1) %>% 
@@ -46,15 +40,34 @@ covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID
     avg_healthcarecost = totslf_avg,
     year = time_frame,
     avg_covidcases = pc_av7dy_2wk_cases,
-    week_start = time_frame_2) %>% 
-  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "week_start") %>% 
+    time_frame = time_frame_2) %>% 
+  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "time_frame") %>% 
   drop_na() %>% 
   mutate(avg_healthcarecost = as.numeric(avg_healthcarecost),
          avg_covidcases = as.numeric(avg_covidcases))
   
-covid_healthcare_costs
+head(covid_healthcare_costs)
 
 ```
+
+## Codebook
+
+Variable | Definition
+
+county | The county where the data is from
+
+state | The state the county is in
+
+county_fips | A code that is unique to each county in the U.S.
+
+avg_healthcarecost | The average out of pocket medical care cost per person
+
+year | The year the data was collected
+
+avg_covidcases | Percent change in seven day rolling average of cases of COVID-19 14-day change
+
+time_frame | The last day of the two week period that COVID-19 cases were recorded
+
 
 ## Preliminary Data Analysis
 
@@ -67,16 +80,13 @@ summary(covid_healthcare_costs$avg_covidcases)
 
 ```
 
+In 2022, across the United States, the average out of pocket healthcare cost per individual was $1,101 with a minimum of $520 and a maximum of $1,890 spend per person. In the first two week of 2021, the average percent change in COVID-19 cases was an increase of roughly 45% while some counties had a decrease of 100% of COVID-19 cases and others had an increase of almost 3,000% in cases.
+
 ## Map
 
 
 
 ```{r map}
-
-##install.packages("devtools")
-##devtools::install_github("UrbanInstitute/urbnmapr")
-##library(urbnmapr)
-
 
 us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = c("county_fips")) 
 
