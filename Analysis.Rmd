@@ -8,12 +8,10 @@ output: html_document
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE)
+#install.packages("tidyverse")
 #install.packages("janitor")
 library(tidyverse, janitor)
 
-# Do we need this?
-renv::snapshot
-#No this is from when we did it in class
 
 ```
 
@@ -98,14 +96,17 @@ us_covid_healthcare_costs %>%
 
 #removing outliers
 ```{r}
+summary(covid_healthcare_costs$avg_covidcases)
+summary(covid_healthcare_costs$avg_healthcarecost)
+
 IQR(covid_healthcare_costs$avg_covidcases, na.rm=T)
-Q1=-5.308
-Q3=55.540
-IQR1=60.8475
-Q1cost=1020
-Q3cost=1170
-IQR2=150
-Q1-1.5*IQR1
+Q1=quantile(covid_healthcare_costs$avg_covidcases, .25, na.rm=T)
+Q3=quantile(covid_healthcare_costs$avg_covidcases, .75, na.rm=T)
+IQR1=Q3-Q1
+Q1cost=quantile(covid_healthcare_costs$avg_healthcarecost, .25, na.rm=T)
+Q3cost=quantile(covid_healthcare_costs$avg_healthcarecost, .75, na.rm=T)
+IQR2=Q3cost-Q1cost
+
 covid_healthcare_costs_cleaned <- covid_healthcare_costs %>% 
   mutate(is_outlier=avg_covidcases<(Q1-1.5*IQR1) | avg_covidcases>(Q3+1.5*IQR1)|avg_healthcarecost<(Q1cost-1.5*IQR2) | avg_healthcarecost>(Q3cost+1.5*IQR2)) %>% 
   filter(!is_outlier)
