@@ -10,6 +10,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 pacman::p_load(tidyverse, janitor, urbnmapr)
 
+library(tidyverse, janitor, urbnmapr)
+
+
 ```
 
 # Average Annual Out of Pocket Healthcare Cost and COVID-19 Cases by County
@@ -44,7 +47,7 @@ covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID
   select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "time_frame") %>% 
   drop_na() %>% 
   mutate(avg_healthcarecost = as.numeric(avg_healthcarecost),
-         avg_covidcases = as.numeric(avg_covidcases))
+         avg_covidcases = as.numeric(avg_covidcases)) 
   
 head(covid_healthcare_costs)
 
@@ -76,8 +79,6 @@ time_frame | The last day of the two week period that COVID-19 cases were record
 ```{r }
 summary(covid_healthcare_costs$avg_healthcarecost)
 summary(covid_healthcare_costs$avg_covidcases)
-
-
 ```
 
 In 2022, across the United States, the average out of pocket healthcare cost per individual was $1,101 with a minimum of $520 and a maximum of $1,890 spend per person. In the first two week of 2021, the average percent change in COVID-19 cases was an increase of roughly 45% while some counties had a decrease of 100% of COVID-19 cases and others had an increase of almost 3,000% in cases.
@@ -89,31 +90,6 @@ In 2022, across the United States, the average out of pocket healthcare cost per
 ```{r map}
 
 us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = c("county_fips")) 
-
-# mediancost<-median(us_covid_healthcare_costs$avg_healthcarecost, na.rm=T)
-# mediancaseincrease<-median(us_covid_healthcare_costs$avg_covidcases, na.rm=T)
-# standardized_us_covid_healthcare_costs <- us_covid_healthcare_costs %>% 
-#   mutate(standardhealthcarecost=((avg_healthcarecost-mediancost)/mediancost)*100,
-#          standardcaseincrease=((avg_covidcases-mediancaseincrease)/mediancaseincrease)*100)
-
-
-
-
-# standardized_us_covid_healthcare_costs %>%
-#   ggplot(aes(long, lat, group = group, fill = standardhealthcarecost)) +
-#   geom_polygon() +
-#   scale_fill_gradientn(colors=rev(rainbow(5)))+
-#   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
-#   theme_void() +
-#   labs(fill = "")
-# 
-# standardized_us_covid_healthcare_costs %>%
-#   ggplot(aes(long, lat, group = group, fill = avg_covidcases)) +
-#   geom_polygon() +
-#   scale_fill_gradientn(colors=rev(rainbow(5)))+
-#   coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
-#   theme_void() +
-#   labs(fill = "")
 
 us_covid_healthcare_costs %>%
   ggplot(aes(long, lat, group = group, fill = avg_healthcarecost)) +
@@ -133,6 +109,58 @@ us_covid_healthcare_costs %>%
 
 ```
 
+#removing outliers
+```{r}
+IQR(covid_healthcare_costs$avg_covidcases, na.rm=T)
+Q1=-5.308
+Q3=55.540
+IQR1=60.8475
+Q1cost=1020
+Q3cost=1170
+IQR2=150
+Q1-1.5*IQR1
+covid_healthcare_costs_cleaned <- covid_healthcare_costs %>% 
+  mutate(is_outlier=avg_covidcases<(Q1-1.5*IQR1) | avg_covidcases>(Q3+1.5*IQR1)|avg_healthcarecost<(Q1cost-1.5*IQR2) | avg_healthcarecost>(Q3cost+1.5*IQR2)) %>% 
+  filter(!is_outlier)
+
+summary(covid_healthcare_costs_cleaned$avg_healthcarecost)
+summary(covid_healthcare_costs_cleaned$avg_covidcases)
+```
+
+#standardizing data as a percent difference from the median for cost and case increase
+```{r}
+us_covid_healthcare_costs1 <- left_join(covid_healthcare_costs_cleaned, counties, by = c("county_fips"))
+
+
+mediancost<-median(us_covid_healthcare_costs1$avg_healthcarecost, na.rm=T)
+mediancaseincrease<-median(us_covid_healthcare_costs1$avg_covidcases, na.rm=T)
+
+standardized_us_covid_healthcare_costs <- us_covid_healthcare_costs1 %>%
+  mutate(standardhealthcarecost=((avg_healthcarecost-mediancost)/mediancost)*100,
+         standardcaseincrease=((avg_covidcases-mediancaseincrease)/mediancaseincrease)*100)
+
+summary(standardized_us_covid_healthcare_costs$standardhealthcarecost)
+summary(standardized_us_covid_healthcare_costs$standardcaseincrease)
+
+```
+#new map w standardization
+```{r}
+standardized_us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = standardhealthcarecost)) +
+  geom_polygon() +
+  scale_fill_gradientn(colors=rev(rainbow(5)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+
+standardized_us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = standardcaseincrease)) +
+  geom_polygon() +
+  scale_fill_gradientn(colors=rev(rainbow(5)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+```
 
 
 

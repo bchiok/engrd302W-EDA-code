@@ -1,0 +1,165 @@
+---
+title: "Analysis.rmd"
+author: "Ben, Emma, and Felix"
+date: "2024-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("janitor")
+library(tidyverse, janitor)
+
+# Do we need this?
+renv::snapshot
+#No this is from when we did it in class
+
+```
+
+# Average Annual Out of Pocket Healthcare Cost and COVID-19 Cases by County
+
+## Introduction
+
+
+
+```{r downloading datasets}
+
+avghealthcarecost2022<-read.csv("data/policymaptest.csv")
+avghealthcarecost2022
+rate2021<-read.csv("data/covidrate2021.csv")
+rate2021
+
+```
+
+
+```{r creating dataset}
+library(janitor)
+
+covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography.Name","Sits.in.State")) %>% 
+  row_to_names(row_number = 1) %>% 
+  clean_names() %>% 
+  rename(
+    county = geo_id_name,
+    state = sitsin_state,
+    county_fips = geo_id,
+    avg_healthcarecost = totslf_avg,
+    year = time_frame,
+    avg_covidcases = pc_av7dy_2wk_cases,
+    week_start = time_frame_2) %>% 
+  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "week_start") %>% 
+  drop_na() %>% 
+  mutate(avg_healthcarecost = as.numeric(avg_healthcarecost),
+         avg_covidcases = as.numeric(avg_covidcases)) 
+  
+covid_healthcare_costs
+
+```
+
+## Preliminary Data Analysis
+
+
+
+```{r }
+summary(covid_healthcare_costs$avg_healthcarecost)
+summary(covid_healthcare_costs$avg_covidcases)
+```
+
+## Map
+
+
+
+```{r map}
+
+##install.packages("devtools")
+##devtools::install_github("UrbanInstitute/urbnmapr")
+library(urbnmapr)
+
+
+us_covid_healthcare_costs <- left_join(covid_healthcare_costs, counties, by = c("county_fips")) 
+
+us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = avg_healthcarecost)) +
+  geom_polygon(color=NA) +
+  scale_fill_gradientn(colors=rev(rainbow(7)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+
+us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = avg_covidcases)) +
+  geom_polygon(color=NA) +
+  scale_fill_gradientn(colors=rev(rainbow(7)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+
+```
+
+#removing outliers
+```{r}
+IQR(covid_healthcare_costs$avg_covidcases, na.rm=T)
+Q1=-5.308
+Q3=55.540
+IQR1=60.8475
+Q1cost=1020
+Q3cost=1170
+IQR2=150
+Q1-1.5*IQR1
+covid_healthcare_costs_cleaned <- covid_healthcare_costs %>% 
+  mutate(is_outlier=avg_covidcases<(Q1-1.5*IQR1) | avg_covidcases>(Q3+1.5*IQR1)|avg_healthcarecost<(Q1cost-1.5*IQR2) | avg_healthcarecost>(Q3cost+1.5*IQR2)) %>% 
+  filter(!is_outlier)
+
+summary(covid_healthcare_costs_cleaned$avg_healthcarecost)
+summary(covid_healthcare_costs_cleaned$avg_covidcases)
+```
+
+#standardizing data as a percent difference from the median for cost and case increase
+```{r}
+us_covid_healthcare_costs1 <- left_join(covid_healthcare_costs_cleaned, counties, by = c("county_fips"))
+
+
+mediancost<-median(us_covid_healthcare_costs1$avg_healthcarecost, na.rm=T)
+mediancaseincrease<-median(us_covid_healthcare_costs1$avg_covidcases, na.rm=T)
+
+standardized_us_covid_healthcare_costs <- us_covid_healthcare_costs1 %>%
+  mutate(standardhealthcarecost=((avg_healthcarecost-mediancost)/mediancost)*100,
+         standardcaseincrease=((avg_covidcases-mediancaseincrease)/mediancaseincrease)*100)
+
+summary(standardized_us_covid_healthcare_costs$standardhealthcarecost)
+summary(standardized_us_covid_healthcare_costs$standardcaseincrease)
+
+```
+#new map w standardization
+```{r}
+standardized_us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = standardhealthcarecost)) +
+  geom_polygon() +
+  scale_fill_gradientn(colors=rev(rainbow(5)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+
+standardized_us_covid_healthcare_costs %>%
+  ggplot(aes(long, lat, group = group, fill = standardcaseincrease)) +
+  geom_polygon() +
+  scale_fill_gradientn(colors=rev(rainbow(5)))+
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  labs(fill = "")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

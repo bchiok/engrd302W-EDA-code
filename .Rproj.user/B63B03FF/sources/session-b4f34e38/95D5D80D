@@ -1,0 +1,28 @@
+{
+    "id": "95D5D80D",
+    "path": "~/engrd302w/my-project/Analysis.Rmd",
+    "project_path": "Analysis.Rmd",
+    "type": "r_markdown",
+    "hash": "3544610177",
+    "contents": "",
+    "dirty": false,
+    "created": 1728579638573.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "130,0",
+        "scrollLine": "115",
+        "last_setup_crc32": "b4f34e389282728d"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1728582441,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1728582441690,
+    "read_only": false,
+    "read_only_alternatives": []
+}
