@@ -1,0 +1,2 @@
+"0","rate2021<-read.csv(""data/covidrate2021.csv"")"
+"0","head(rate2021)"
