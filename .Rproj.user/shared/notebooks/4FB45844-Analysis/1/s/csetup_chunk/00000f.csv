@@ -1,0 +1,135 @@
+"0",""
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","#install.packages(""janitor"")"
+"0","library(tidyverse, janitor)"
+"0",""
+"0","# Do we need this?"
+"0","renv::snapshot"
+"1","function (project = NULL, ..., library = NULL, lockfile = paths$lockfile(project = project), 
+"
+"1","    type = settings$snapshot.type(project = project), dev = FALSE, 
+"
+"1","    repos = getOption(""repos""), packages = NULL, exclude = NULL, 
+"
+"1","    prompt = interactive(), update = FALSE, force = FALSE, reprex = FALSE) 
+"
+"1","{
+"
+"1","    renv_consent_check()
+"
+"1","    renv_scope_error_handler()
+"
+"1","    renv_dots_check(...)
+"
+"1","    renv_snapshot_auto_suppress_next()
+"
+"1","    project <- renv_project_resolve(project)
+"
+"1","    renv_project_lock(project = project)
+"
+"1","    renv_scope_verbose_if(prompt)
+"
+"1","    repos <- renv_repos_validate(repos)
+"
+"1","    renv_scope_options(repos = repos)
+"
+"1","    renv_load_cache_renvignore(project = project)
+"
+"1","    if (!is.null(lockfile)) 
+"
+"1","        renv_activate_prompt(""snapshot"", library, prompt, project)
+"
+"1","    libpaths <- renv_path_normalize(library %||% renv_libpaths_all())
+"
+"1","    if (config$snapshot.validate()) 
+"
+"1","        renv_snapshot_preflight(project, libpaths)
+"
+"1","    if (!is.null(packages)) {
+"
+"1","        if (!missing(type)) {
+"
+"1","            fmt <- ""packages argument is set; type argument %s will be ignored""
+"
+"1","            warningf(fmt, stringify(type))
+"
+"1","        }
+"
+"1","        type <- ""packages""
+"
+"1","    }
+"
+"1","    alt <- new <- renv_lockfile_create(project = project, type = type, 
+"
+"1","        libpaths = libpaths, packages = packages, exclude = exclude, 
+"
+"1","        prompt = prompt, force = force, dev = dev)
+"
+"1","    if (is.null(lockfile)) 
+"
+"1","        return(new)
+"
+"1","    if (reprex) 
+"
+"1","        return(renv_snapshot_reprex(new))
+"
+"1","    valid <- renv_snapshot_validate(project, new, libpaths)
+"
+"1","    renv_snapshot_validate_report(valid, prompt, force)
+"
+"1","    old <- list()
+"
+"1","    if (file.exists(lockfile)) {
+"
+"1","        old <- renv_lockfile_read(lockfile)
+"
+"1","        alt <- renv_snapshot_preserve(old, new)
+"
+"1","        diff <- renv_lockfile_diff(old, alt)
+"
+"1","        if (empty(diff)) {
+"
+"1","            writef(""- The lockfile is already up to date."")
+"
+"1","            return(renv_snapshot_successful(alt, prompt, project))
+"
+"1","        }
+"
+"1","    }
+"
+"1","    new <- alt
+"
+"1","    if (update) 
+"
+"1","        for (package in names(old$Packages)) new$Packages[[package]] <- new$Packages[[package]] %||% 
+"
+"1","            old$Packages[[package]]
+"
+"1","    actions <- renv_lockfile_diff_packages(old, new)
+"
+"1","    if (prompt || renv_verbose()) 
+"
+"1","        renv_snapshot_report_actions(actions, old, new)
+"
+"1","    cancel_if(length(actions) && file.exists(lockfile) && prompt && 
+"
+"1","        !proceed())
+"
+"1","    ensure_parent_directory(lockfile)
+"
+"1","    renv_lockfile_write(new, file = lockfile)
+"
+"1","    renv_infrastructure_write_rbuildignore(project)
+"
+"1","    renv_infrastructure_write_activate(project, create = FALSE)
+"
+"1","    renv_snapshot_successful(new, prompt, project)
+"
+"1","}
+"
+"1","<bytecode: 0x00000230619759e8>
+"
+"1","<environment: namespace:renv>
+"
+"0","#No this is from when we did it in class"
+"0",""
