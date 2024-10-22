@@ -1,5 +1,5 @@
 ---
-title: "Analysis.rmd"
+title: "Exploratory Data Analysis: COVID-19 Cases and Average Annual Out of Pocket Healthcare Costs in 2022"
 author: "Ben, Emma, and Felix"
 date: "2024-10-03"
 output: html_document
@@ -19,15 +19,13 @@ library(tidyverse, janitor, urbnmapr)
 
 ```
 
-# Average Annual Out of Pocket Healthcare Cost and COVID-19 Cases by County
-
-## Introduction - Needs to change with new data
+### Introduction - Needs to change with new data
 
 Our goal in this analysis is to examine how percent change in COVID-19 cases between December 31st, 2020 and January 14th, 2021 affected average annual dollars spent out of pocket per person on medical care in 2022. Specifically, how the cost of out of pocket medical care has been affected in counties with high COVID-19 cases. In this analysis, we will be utilizing two different datasets. The first is a dataset that describes the average annual dollars spent out of pocket per person on medical care in 2022. This information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). The second dataset describes the percent change in seven day rolling average of cases of COVID-19 14-day change between December 31st, 2020 and January 14th, 2021. This information is from the New York Times national database of COVID-19 cases and deaths.
 
-```{r downloading datasets}
+```{r downloading datasets - Probably Remove, include=FALSE}
 
-avghealthcarecost2022<-read.csv("data/policymaptest.csv")
+avghealthcarecost2022 <- read.csv("data/policymaptest.csv")
 head(avghealthcarecost2022)
 
 # Possibly Remove
@@ -38,36 +36,15 @@ head(rate2021)
 cases2021<-read.csv("data/us-counties-2021.csv")
 head(cases2021)
 cases2022<-read.csv("data/us-counties-2022.csv")
-cases2022
+head(cases2022)
 
 ```
 
-```{r cleaning cases -NEW}
+### Data Cleaning
 
-annualcases2021 <- cases2021 %>% 
-  select(!"deaths") %>% 
-  pivot_wider(names_from = "date",
-              values_from = "cases") %>% 
-  rowwise() %>%
-  mutate(annualcases_2021 = sum(c_across(starts_with("2021")), na.rm = T)) %>%
-  select("county", "state", "fips", "annualcases_2021")
-head(annualcases2021)
+```{r cleaning costs}
 
-annualcases2022 <- cases2022 %>% 
-  select(!"deaths") %>% 
-  pivot_wider(names_from = "date",
-              values_from = "cases") %>% 
-  rowwise() %>%
-  mutate(annualcases_2022 = sum(c_across(starts_with("2022")), na.rm = T)) %>%
-  select("county", "state", "fips", "annualcases_2022")
-head(annualcases2022)
-
-```
-
-
-```{r creating dataset - NEW}
-
-healthcare_2022 <- avghealthcarecost2022 %>% 
+avghealthcare_2022 <- read.csv("data/policymaptest.csv") %>% 
   row_to_names(row_number = 1) %>% 
   clean_names() %>% 
   left_join(state_keys, by = c("sitsin_state" = "ab")) %>% 
@@ -78,22 +55,50 @@ healthcare_2022 <- avghealthcarecost2022 %>%
     avg_cost_2022 = totslf_avg) %>%
   mutate(fips = as.numeric(fips)) %>% 
   select("county","state", "fips", "avg_cost_2022")
-head(healthcare_2022)
-
-covid_costs <- healthcare_2022 %>% 
-  left_join(annualcases2021, by = c("county","state", "fips")) %>% 
-  left_join(annualcases2022, by = c("county","state", "fips"))
-head(covid_costs)
-
-# Annual cases = total number of cases for the year in that specific county
+head(avghealthcare_2022)
 
 ```
 
-```{r creating dataset - ORIGINAL}
 
-covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography.Name","Sits.in.State")) %>% 
-  row_to_names(row_number = 1) %>% 
-  clean_names() %>% 
+```{r cleaning cases -NEW, message=FALSE}
+
+covidcases2021 <- read.csv("data/us-counties-2021.csv") %>% 
+  select(!"deaths") %>% 
+  pivot_wider(names_from = "date",
+              values_from = "cases") %>% 
+  rowwise() %>%
+  mutate(covidcases_2021 = sum(c_across(starts_with("2021")), na.rm = T)) %>%
+  select("county", "state", "fips", "covidcases_2021")
+head(covidcases2021)
+
+covidcases2022 <- read.csv("data/us-counties-2022.csv") %>% 
+  select(!"deaths") %>% 
+  pivot_wider(names_from = "date",
+              values_from = "cases") %>% 
+  rowwise() %>%
+  mutate(covidcases_2022 = sum(c_across(starts_with("2022")), na.rm = T)) %>%
+  select("county", "state", "fips", "covidcases_2022")
+head(covidcases2022)
+
+```
+
+
+```{r creating dataset - NEW}
+
+covid_costs <- avghealthcare_2022 %>% 
+  left_join(covidcases2021, by = c("county","state", "fips")) %>% 
+  left_join(covidcases2022, by = c("county","state", "fips"))
+head(covid_costs)
+
+# covid cases = total number of cases for the year in that specific county
+
+```
+
+```{r creating dataset - ORIGINAL, include=FALSE}
+
+covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID", "Geography.Name","Sits.in.State")) %>%
+  row_to_names(row_number = 1) %>%
+  clean_names() %>%
   rename(
     county = geo_id_name,
     state = sitsin_state,
@@ -101,36 +106,29 @@ covid_healthcare_costs <- left_join(avghealthcarecost2022, rate2021, by=c("GeoID
     avg_healthcarecost = totslf_avg,
     year = time_frame,
     avg_covidcases = pc_av7dy_2wk_cases,
-    time_frame = time_frame_2) %>% 
-  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "time_frame") %>% 
-  drop_na() %>% 
+    time_frame = time_frame_2) %>%
+  select("county","state", "county_fips", "avg_healthcarecost", "year", "avg_covidcases", "time_frame") %>%
+  drop_na() %>%
   mutate(avg_healthcarecost = as.numeric(avg_healthcarecost),
-         avg_covidcases = as.numeric(avg_covidcases)) 
-  
+         avg_covidcases = as.numeric(avg_covidcases))
+
 head(covid_healthcare_costs)
 
 ```
 
-## Codebook -Needs to change with new data
+### Codebook
 
-Variable | Definition
+```{r codebook, echo = FALSE, results = TRUE}
 
-county | The county where the data is from
+Variable  <- c("county","state","fips","average annual healthcare cost", "COVID-19 cases")
+Definition <- c("county data was collected in", "state that county resides in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "cummalitive COVID-19 cases  per year")
+d <- data.frame(Variable,Definition)
+knitr::kable(d)
 
-state | The state the county is in
-
-county_fips | A code that is unique to each county in the U.S.
-
-avg_healthcarecost | The average out of pocket medical care cost per person
-
-year | The year the data was collected
-
-avg_covidcases | Percent change in seven day rolling average of cases of COVID-19 14-day change
-
-time_frame | The last day of the two week period that COVID-19 cases were recorded
+```
 
 
-## Preliminary Data Analysis - Needs to change with new data
+### Preliminary Data Analysis - Needs to change with new data
 
 
 
@@ -141,7 +139,7 @@ summary(covid_healthcare_costs$avg_covidcases)
 
 In 2022, across the United States, the average out of pocket healthcare cost per individual was $1,101 with a minimum of $520 and a maximum of $1,890 spend per person. In the first two week of 2021, the average percent change in COVID-19 cases was an increase of roughly 45% while some counties had a decrease of 100% of COVID-19 cases and others had an increase of almost 3,000% in cases.
 
-## Map
+### Map
 
 
 
@@ -169,7 +167,7 @@ us_covid_healthcare_costs %>%
 
 ```
 
-### Removing outliers
+#### Removing outliers
 ```{r}
 IQR(covid_healthcare_costs$avg_covidcases, na.rm=T)
 Q1=-5.308
@@ -187,7 +185,7 @@ summary(covid_healthcare_costs_cleaned$avg_healthcarecost)
 summary(covid_healthcare_costs_cleaned$avg_covidcases)
 ```
 
-### Standardizing data as a percent difference from the median for cost and case increase
+#### Standardizing data as a percent difference from the median for cost and case increase
 ```{r}
 us_covid_healthcare_costs1 <- left_join(covid_healthcare_costs_cleaned, counties, by = c("county_fips"))
 
@@ -203,7 +201,7 @@ summary(standardized_us_covid_healthcare_costs$standardhealthcarecost)
 summary(standardized_us_covid_healthcare_costs$standardcaseincrease)
 
 ```
-### New map w standardization
+#### New map w standardization
 ```{r}
 standardized_us_covid_healthcare_costs %>%
   ggplot(aes(long, lat, group = group, fill = standardhealthcarecost)) +
