@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 pacman::p_load(tidyverse, janitor, urbnmapr)
 
 state_keys <- tibble(state = state.name, ab = state.abb) %>%
+  add_row(state = "District of Columbia", ab = "DC") %>% 
   rename(state_name = state)
 state_keys
 
@@ -25,7 +26,7 @@ Our goal in this analysis is to examine how percent change in COVID-19 cases bet
 
 ```{r downloading datasets - Probably Remove, include=FALSE}
 
-avghealthcarecost2022 <- read.csv("data/policymaptest.csv")
+avghealthcarecost2022 <- read.csv("data/healthcarecosts2022.csv")
 head(avghealthcarecost2022)
 
 # Possibly Remove
@@ -44,9 +45,10 @@ head(cases2022)
 
 ```{r cleaning costs}
 
-avghealthcare_2022 <- read.csv("data/policymaptest.csv") %>% 
+avghealthcare_2022 <- read.csv("data/healthcarecosts2022.csv") %>% 
   row_to_names(row_number = 1) %>% 
   clean_names() %>% 
+  filter(!(sitsin_state %in% c("AS", "GU", "MP", "PR", "VI"))) %>% 
   left_join(state_keys, by = c("sitsin_state" = "ab")) %>% 
   rename(
     county = geo_id_name,
@@ -56,6 +58,12 @@ avghealthcare_2022 <- read.csv("data/policymaptest.csv") %>%
   mutate(fips = as.numeric(fips)) %>% 
   select("county","state", "fips", "avg_cost_2022")
 head(avghealthcare_2022)
+unique(avghealthcare_2022$state)
+
+CT_cost <- avghealthcare_2022 %>% 
+  filter(state == "Georgia")
+head(CT_cost)
+unique(CT_cost$county)
 
 ```
 
@@ -63,22 +71,37 @@ head(avghealthcare_2022)
 ```{r cleaning cases -NEW, message=FALSE}
 
 covidcases2021 <- read.csv("data/us-counties-2021.csv") %>% 
-  select(!"deaths") %>% 
+  select("date", "geoid", "county", "state", "cases_avg_per_100k") %>%
   pivot_wider(names_from = "date",
-              values_from = "cases") %>% 
+              values_from = "cases_avg_per_100k") %>%
   rowwise() %>%
-  mutate(covidcases_2021 = sum(c_across(starts_with("2021")), na.rm = T)) %>%
+  mutate(covidcases_2021 = sum(c_across(starts_with("2021")), na.rm = T) / 365,
+         fips = as.numeric(str_remove(geoid, "USA-"))) %>%
   select("county", "state", "fips", "covidcases_2021")
 head(covidcases2021)
 
+
 covidcases2022 <- read.csv("data/us-counties-2022.csv") %>% 
-  select(!"deaths") %>% 
+select("date", "geoid", "county", "state", "cases_avg_per_100k") %>%
   pivot_wider(names_from = "date",
-              values_from = "cases") %>% 
+              values_from = "cases_avg_per_100k") %>%
   rowwise() %>%
-  mutate(covidcases_2022 = sum(c_across(starts_with("2022")), na.rm = T)) %>%
+  mutate(covidcases_2022 = sum(c_across(starts_with("2022")), na.rm = T) / 365,
+         fips = as.numeric(str_remove(geoid, "USA-"))) %>%
   select("county", "state", "fips", "covidcases_2022")
 head(covidcases2022)
+
+covid_cases <- covidcases2021 %>% 
+  left_join(covidcases2022, by = c("county","state", "fips"))
+unique(covid_cases$state)
+covid_cases <- covid_cases %>% 
+  filter(!(state %in% c("Puerto Rico", "Northern Mariana Islands", "Virgin Islands", "American Samoa")))
+unique(covid_cases$state)
+head(covid_cases)
+
+CT <- covid_cases %>% 
+  filter(state == "Georgia")
+CT
 
 ```
 
@@ -86,8 +109,7 @@ head(covidcases2022)
 ```{r creating dataset - NEW}
 
 covid_costs <- avghealthcare_2022 %>% 
-  left_join(covidcases2021, by = c("county","state", "fips")) %>% 
-  left_join(covidcases2022, by = c("county","state", "fips"))
+  left_join(covid_cases, by = c("county","state", "fips"))
 head(covid_costs)
 
 # covid cases = total number of cases for the year in that specific county
