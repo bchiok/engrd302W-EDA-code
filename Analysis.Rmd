@@ -101,6 +101,7 @@ head(covidcases2022_new)
 
 ```
 
+
 ```{r joining 2021 and 2022}
 
 covid_cases_new <- covidcases2021_new %>% 
@@ -123,6 +124,7 @@ head(covid_pop)
 
 ```
 
+
 ```{r joining cases and cost}
 
 covid_costs <- avghealthcare_2022 %>% 
@@ -133,7 +135,34 @@ covid_costs <- avghealthcare_2022 %>%
 head(covid_costs)
 
 summary(covid_costs$rank2021case)
+
 ```
+
+### Codebook - NEED TO FIX WITH WHAT WE ACTUALLY USE
+
+```{r codebook, echo = FALSE, results = TRUE}
+
+Variable  <- c("county","state","fips","average annual healthcare cost", "COVID-19 cases")
+Definition <- c("county data was collected in", "state that county resides in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "cummalitive COVID-19 cases  per year")
+d <- data.frame(Variable,Definition)
+knitr::kable(d)
+
+```
+
+
+### Preliminary Data Analysis - Needs to change with new data - Updated a little but still needs work
+
+
+
+```{r }
+summary(covid_costs$avg_cost_2022)
+summary(covid_costs$cases_per_100k_2021)
+summary(covid_costs$cases_per_100k_2022)
+```
+
+In 2022, across Georgia, the average out of pocket healthcare cost per individual was $1,200 with a minimum of $800 and a maximum of $1,440 spend per person. The mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was approximately 30 while it was approximately 27 in 2022.
+
+### Map
 
 ```{r map RANK}
 counties1<-counties %>% 
@@ -165,6 +194,8 @@ mapcovidcases %>%
   theme_void() +
   labs(fill = "")
 ```
+
+
 ```{r map total cases/costs}
 
 mapcovidcases %>%
@@ -193,7 +224,7 @@ mapcovidcases %>%
   labs(fill = "")
 ```
 
-
+## I believe everything below this is old stuff we aren't using, but correct me if I'm wrong
 
 ```{r cleaning cases, message=FALSE}
 
@@ -264,28 +295,7 @@ mapcovidcases %>%
 
 ```
 
-### Codebook - NEED TO FIX WITH WHAT WE ACTUALLY USE
 
-```{r codebook, echo = FALSE, results = TRUE}
-
-Variable  <- c("county","state","fips","average annual healthcare cost", "COVID-19 cases")
-Definition <- c("county data was collected in", "state that county resides in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "cummalitive COVID-19 cases  per year")
-d <- data.frame(Variable,Definition)
-knitr::kable(d)
-
-```
-
-
-### Preliminary Data Analysis - Needs to change with new data
-
-
-
-```{r }
-# summary(covid_healthcare_costs$avg_healthcarecost)
-# summary(covid_healthcare_costs$avg_covidcases)
-```
-
-In 2022, across the United States, the average out of pocket healthcare cost per individual was $1,101 with a minimum of $520 and a maximum of $1,890 spend per person. In the first two week of 2021, the average percent change in COVID-19 cases was an increase of roughly 45% while some counties had a decrease of 100% of COVID-19 cases and others had an increase of almost 3,000% in cases.
 
 ### Map
 
