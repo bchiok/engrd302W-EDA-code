@@ -1,0 +1,8 @@
+"0",""
+"0","mapcovidcases %>%"
+"0","  ggplot(aes(long, lat, group = group, fill = rank2022case)) +"
+"0","  geom_polygon() +"
+"0","  scale_fill_gradient(low=""red"", high=""yellow"")+"
+"0","  coord_map(projection = ""albers"", lat0 = 39, lat1 = 45) +"
+"0","  theme_void() +"
+"0","  labs(fill = ""2022 County rank of Average Cases per 100k per Day"")"

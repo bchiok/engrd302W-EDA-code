@@ -1,0 +1,21 @@
+"0",""
+"0","covidcases_2021 <- read_csv(""./data/us-counties-2021.csv"") %>% "
+"0","  filter(state == ""Georgia"" & county != ""Unknown"") %>% "
+"0","  select(""date"", ""geoid"", ""county"", ""cases"") %>%"
+"0","  pivot_wider(names_from = ""date"","
+"0","              values_from = ""cases"") %>%"
+"0","  mutate(fips = as.numeric(str_remove(geoid, ""USA-""))) %>% "
+"0","  select(-""geoid"")"
+"1","[1mRows: [22m[34m1192587[39m [1mColumns: [22m[34m10[39m
+"
+"1","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m  (3): geoid, county, state
+[32mdbl[39m  (6): cases, cases_avg, cases_avg_per_100k, deaths, deaths_avg, deaths_avg_per_100k
+[34mdate[39m (1): date
+"
+"1","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message.
+"
+"0","head(covidcases_2021)"
