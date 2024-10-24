@@ -14,6 +14,10 @@ output: html_document
 #library(devtools)
 #devtools::install_github("UrbanInstitute/urbnmapr")
 
+# # Possibly Remove
+# rate2021<-read.csv("data/covidrate2021.csv")
+# head(rate2021)
+
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 pacman::p_load(tidyverse, janitor, urbnmapr)
 
@@ -23,32 +27,17 @@ library(tidyverse, janitor, urbnmapr)
 
 ### Introduction - Needs to change with new data
 
-Our goal in this analysis is to examine how percent change in COVID-19 cases between December 31st, 2020 and January 14th, 2021 affected average annual dollars spent out of pocket per person on medical care in 2022. Specifically, how the cost of out of pocket medical care has been affected in counties with high COVID-19 cases. In this analysis, we will be utilizing two different datasets. The first is a dataset that describes the average annual dollars spent out of pocket per person on medical care in 2022. This information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). The second dataset describes the percent change in seven day rolling average of cases of COVID-19 14-day change between December 31st, 2020 and January 14th, 2021. This information is from the New York Times national database of COVID-19 cases and deaths.
+Our goal for this exploratory data analysis was to visualize key information about out of pocket healthcare costs and COVID-19 cases in Georgia. In order to do this, we utilized parts of three different datasets. 
 
-```{r downloading datasets - Probably Remove, include=FALSE}
+#### Out of Pocket Healthcare Costs
 
-# avghealthcarecost2022 <- read.csv("data/healthcarecosts2022.csv")
-# head(avghealthcarecost2022)
-# 
-# # Possibly Remove
-# rate2021<-read.csv("data/covidrate2021.csv")
-# head(rate2021)
-# 
-# # New stuff added
-# cases2021<-read.csv("data/us-counties-2021.csv")
-# head(cases2021)
-# cases2022<-read.csv("data/us-counties-2022.csv")
-# head(cases2022)
+One of the main variables we are interested in is out of pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). 
 
-
-
-```
-
-### Data Cleaning
+Below, we are downloading the dataset and selecting the information we need in order to do our analysis. This includes filtering the data to only include information from Georgia, renaming the variables to more intuitive names, and removing variables we are not interested in. This variable will ultimately describe the average annual out of pocket healthcare cost per person for each county in Georgia in 2022.
 
 ```{r cleaning costs}
 
-avghealthcare_2022 <- read.csv("./data/healthcarecosts2022.csv") %>% 
+avg_healthcare_costs_2022 <- read_csv("./data/healthcarecosts2022.csv") %>% 
   row_to_names(row_number = 1) %>% 
   clean_names() %>%
   filter(sitsin_state == "GA") %>%
@@ -57,13 +46,58 @@ avghealthcare_2022 <- read.csv("./data/healthcarecosts2022.csv") %>%
   mutate(fips = as.numeric(geo_id),
          avg_cost_2022=as.numeric(avg_cost_2022)) %>%
   select("county", "fips", "avg_cost_2022")
-head(avghealthcare_2022)
+head(avg_healthcare_costs_2022)
 
 ```
 
+#### COVID-19 Cases
+
+The other main data we are interested in exploring is related to COVID-19 cases. This data comes from journalists at the New York Times who pieced together this information from a variety of county, state, and national government sources. This data does have some limitations. Due to the rapidly changing nature of the COVID-19 pandemic, officials did not always report data in the most consistent way, but this would be true of any source reporting on COVID-19 cases. 
+
+The variable we are particularly interested in gathering from this data is the number of new COVID-19 cases per day, which includes both confirmed and probable cases. There are also limitations with this data as the New York Times prioritized the accuracy of cumulative case counts over new daily cases, which causes some of the new daily cases to appear anomalous as it is derived from differences in cumulative cases from one day to another.
+
+(If you are interested in learning more about this dataset, the New York Times has published a [GitHub](https://github.com/nytimes/covid-19-data?tab=readme-ov-file#readme) with lots of data collected during the COVID-19 pandemic. The data used in our analysis comes specifically from the [Rolling Averages](https://github.com/nytimes/covid-19-data/tree/master/rolling-averages) file.)
+
+The reason we chose this variable to focus on rather than a variable describing the cumulative cases per day, is due to the nature of our out of pocket healthcare cost variable. The out of pocket healthcare cost variable is an annual average. We wanted to make the COVID-19 case variable comparable, which means we would also need to have one number per county per year. If we utilized a cumulative variable, when we would average over the year, we would be counting the same case many times, but if we are focusing on new cases per day, we can get the average daily new cases per county.
+
+Below, we are downloading the data and selecting the information needed for our analysis. This includes filtering so we only have the data for Georgia as well as standardizing the names of variables. In order for us to later make an average variable, it is necessary to have one row per county rather than one row per date.
+
+```{r cleaning 2021 cases}
+
+covidcases_2021 <- read_csv("./data/us-counties-2021.csv") %>% 
+  filter(state == "Georgia" & county != "Unknown") %>% 
+  select("date", "geoid", "county", "cases") %>%
+  pivot_wider(names_from = "date",
+              values_from = "cases") %>%
+  mutate(fips = as.numeric(str_remove(geoid, "USA-"))) %>% 
+  select(-"geoid")
+head(covidcases_2021)
+
+```
+
+
+```{r cleaning 2022 cases}
+
+covidcases_2022 <- read.csv("./data/us-counties-2022.csv") %>% 
+filter(state == "Georgia" & county != "Unknown") %>% 
+  select("date", "geoid", "county", "cases") %>%
+  pivot_wider(names_from = "date",
+              values_from = "cases") %>%
+  mutate(fips = as.numeric(str_remove(geoid, "USA-"))) %>% 
+  select(-"geoid")
+head(covidcases_2022)
+
+```
+
+#### Population
+
+Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. 
+
+Below, we are downloading the data and selecting the variables of interest. This includes filtering for only data from Georgia counties and again standardizing the names of the variables.
+
 ```{r cleaning population - NEW}
 
-county_pop <- read.csv("./data/population.csv") %>% 
+county_population <- read.csv("./data/population.csv") %>% 
   clean_names() %>% 
   filter(stname == "Georgia" & ctyname != "Georgia") %>% 
   mutate(county = sprintf("%03d", county)) %>% 
@@ -71,79 +105,55 @@ county_pop <- read.csv("./data/population.csv") %>%
   mutate(county = str_remove(ctyname, " County"),
          fips = as.numeric(fips)) %>% 
   select("fips", "county", "popestimate2021", "popestimate2022")
-head(county_pop)
+head(county_population)
 
 ```
 
-```{r cleaning 2021 cases}
+### Creating the Dataset
 
-covidcases2021_new <- read.csv("./data/us-counties-2021.csv") %>% 
-  filter(state == "Georgia" & county != "Unknown") %>% 
-  select("date", "geoid", "county", "cases") %>%
-  pivot_wider(names_from = "date",
-              values_from = "cases") %>%
-  mutate(fips = as.numeric(str_remove(geoid, "USA-"))) %>% 
-  select(-"geoid")
-head(covidcases2021_new)
-
-```
-
-```{r cleaning 2022 cases}
-
-covidcases2022_new <- read.csv("./data/us-counties-2022.csv") %>% 
-filter(state == "Georgia" & county != "Unknown") %>% 
-  select("date", "geoid", "county", "cases") %>%
-  pivot_wider(names_from = "date",
-              values_from = "cases") %>%
-  mutate(fips = as.numeric(str_remove(geoid, "USA-"))) %>% 
-  select(-"geoid")
-head(covidcases2022_new)
-
-```
-
-
-```{r joining 2021 and 2022}
-
-covid_cases_new <- covidcases2021_new %>% 
-  left_join(covidcases2022_new, by = c("county", "fips"))
-
-```
-
+The three datasets we downloaded above and cleaned are now ready to be combined to be utilized in our exploratory analysis. Below, we are combining the COVID-19 cases for both 2021 and 2022 with the county population data. Here we are creating two new variables for each year in order to create variables that contain the average daily new COVID-19 cases for each year and standardize that data to the average per 100,000 people.
 
 ```{r joining cases and population, message=FALSE}
 
-covid_pop <- covid_cases_new %>% 
-  left_join(county_pop, by = c("county", "fips")) %>% 
+covidcases_population <- covidcases_2021 %>% 
+  left_join(covidcases_2022, by = c("county", "fips")) %>% 
+  left_join(county_population, by = c("county", "fips")) %>% 
   rowwise() %>% 
   mutate(avg_daily_cases_2021 = sum(c_across(starts_with("2021")), na.rm = T) / 365,
          avg_daily_cases_2022 = sum(c_across(starts_with("2022")), na.rm = T) / 365) %>% 
   mutate(cases_per_100k_2021 = (avg_daily_cases_2021/popestimate2021)*100000,
          cases_per_100k_2022 = (avg_daily_cases_2022/popestimate2022)*100000) %>% 
   select("county", "fips", "avg_daily_cases_2021", "avg_daily_cases_2022", "popestimate2021", "popestimate2022", "cases_per_100k_2021", "cases_per_100k_2022")
-head(covid_pop)
+head(covidcases_population)
 
 ```
 
+Lastly, we are joining the above dataset with our out of pocket healthcare data to ultimately have the dataset containing both of our primary interests: COVID-19 cases and out of pocket healthcare costs per county in Georgia.
 
 ```{r joining cases and cost}
 
-covid_costs <- avghealthcare_2022 %>% 
-  left_join(covid_pop, by = c("county", "fips")) %>% 
+covid_healthcarecosts <- avg_healthcare_costs_2022 %>% 
+  left_join(covidcases_population, by = c("county", "fips")) %>% 
   mutate(rank2021case=rank(-cases_per_100k_2021, ties.method="first"),
          rank2022case=rank(-cases_per_100k_2022, ties.method="first"),
          rank2022cost=rank(-avg_cost_2022, ties.method="first"))
-head(covid_costs)
+head(covid_healthcarecosts)
 
-summary(covid_costs$rank2021case)
+summary(covid_healthcarecosts$rank2021case)
 
 ```
 
-### Codebook - NEED TO FIX WITH WHAT WE ACTUALLY USE
+### Codebook
+
+Below is an explanation of the variables in our dataset for the exploratory analysis.
 
 ```{r codebook, echo = FALSE, results = TRUE}
 
-Variable  <- c("county","state","fips","average annual healthcare cost", "COVID-19 cases")
-Definition <- c("county data was collected in", "state that county resides in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "cummalitive COVID-19 cases  per year")
+# This still needs info on ranked cases if you can fill that in Ben, thanks! - Emma
+# Also feel free to change any variable name or description. One of the class readings talked about how it was more useful to give the variables regular names rather than what we actually used for variable names to make it easier for like regular people to understand, but I don't know if they sound good
+
+Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K", "ranked cases")
+Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people", "")
 d <- data.frame(Variable,Definition)
 knitr::kable(d)
 
@@ -155,9 +165,9 @@ knitr::kable(d)
 
 
 ```{r }
-summary(covid_costs$avg_cost_2022)
-summary(covid_costs$cases_per_100k_2021)
-summary(covid_costs$cases_per_100k_2022)
+summary(covid_healthcarecosts$avg_cost_2022)
+summary(covid_healthcarecosts$cases_per_100k_2021)
+summary(covid_healthcarecosts$cases_per_100k_2022)
 ```
 
 In 2022, across Georgia, the average out of pocket healthcare cost per individual was $1,200 with a minimum of $800 and a maximum of $1,440 spend per person. The mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was approximately 30 while it was approximately 27 in 2022.
@@ -167,7 +177,7 @@ In 2022, across Georgia, the average out of pocket healthcare cost per individua
 ```{r map RANK}
 counties1<-counties %>% 
   mutate(fips=as.numeric(county_fips))
-mapcovidcases<- left_join(covid_costs, counties1, by=c("fips"))
+mapcovidcases<- left_join(covid_healthcarecosts, counties1, by=c("fips"))
 
 mapcovidcases %>%
   ggplot(aes(long, lat, group = group, fill = rank2021case)) +
@@ -223,6 +233,21 @@ mapcovidcases %>%
   theme_void() +
   labs(fill = "")
 ```
+
+
+### References - Not finalized yet need to figure out how to do hanging indent, but they should be in APA format if I did them correctly
+
+PolicyMap. (2022). *Average annual dollars spent out of pocket per person on medical care in 2022* [Data set].
+     PolicyMap. [https://www.policymap.com/](https://www.policymap.com/).
+
+The New York Times. (2021). *Coronavirus (Covid-19) Data in the United States* [Data set]. The New York Times.
+     [https://github.com/nytimes/covid-19-data](https://github.com/nytimes/covid-19-data).
+
+United States Census Bureau. (2024). *Annual Resident Population Estimates, Estimated Components of Resident*
+     *Population Change, and Rates of the Components of Resident Population Change for States and Counties:*
+     *April 1, 2020 to July 1, 2023* [Data set]. United States Census Bureau. 
+     [https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html).
+
 
 ## I believe everything below this is old stuff we aren't using, but correct me if I'm wrong
 
