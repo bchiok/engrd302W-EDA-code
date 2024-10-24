@@ -13,7 +13,7 @@ pacman::p_load(tidyverse, janitor, urbnmapr, stringr)
 
 ```
 
-### Introduction - Needs to change with new data
+### Introduction
 
 The COVID-19 pandemic's impact on the US economy has been widely documented, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States. Our goal for this exploratory data analysis was to visualize key information about out of pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
 
