@@ -1,7 +1,7 @@
 ---
-title: "Exploratory Data Analysis: COVID-19 Cases and Average Annual Out of Pocket Healthcare Costs in 2022"
+title: "Exploratory Data Analysis: COVID-19 Cases and Average Annual Out of Pocket Healthcare Costs"
 author: "Ben, Emma, and Felix"
-date: "2024-10-03"
+date: "2024-10-25"
 output: html_document
 ---
 
@@ -25,7 +25,7 @@ Below, we are downloading the dataset and selecting the information we need in o
 
 ```{r cleaning costs}
 
-avg_healthcare_costs_2022 <- read.csv("./data/healthcarecosts2022.csv") %>% 
+avg_healthcare_costs_2022 <- read_csv("./data/healthcarecosts2022.csv") %>% 
   row_to_names(row_number = 1) %>% 
   clean_names() %>%
   filter(sitsin_state == "GA") %>%
@@ -52,7 +52,7 @@ Below, we are downloading the data and selecting the information needed for our 
 
 ```{r cleaning 2021 cases}
 
-covidcases_2021 <- read.csv("./data/us-counties-2021.csv") %>% 
+covidcases_2021 <- read_csv("./data/us-counties-2021.csv") %>% 
   filter(state == "Georgia" & county != "Unknown") %>% 
   select("date", "geoid", "county", "cases") %>%
   pivot_wider(names_from = "date",
@@ -66,7 +66,7 @@ head(covidcases_2021)
 
 ```{r cleaning 2022 cases}
 
-covidcases_2022 <- read.csv("./data/us-counties-2022.csv") %>% 
+covidcases_2022 <- read_csv("./data/us-counties-2022.csv") %>% 
 filter(state == "Georgia" & county != "Unknown") %>% 
   select("date", "geoid", "county", "cases") %>%
   pivot_wider(names_from = "date",
@@ -85,13 +85,13 @@ Below, we are downloading the data and selecting the variables of interest. This
 
 ```{r cleaning population}
 
-county_population <- read.csv("./data/population.csv") %>% 
-  clean_names() %>% 
-  filter(stname == "Georgia" & ctyname != "Georgia") %>% 
-  mutate(county = sprintf("%03d", county)) %>% 
-  unite(col = "fips", state, county, sep = "") %>% 
+county_population <- read_csv("./data/population.csv") %>% 
+  clean_names() %>%
+  filter(stname == "Georgia" & ctyname != "Georgia") %>%
+  mutate(county = sprintf("%03d", as.numeric(county))) %>%
+  unite(col = "fips", state, county, sep = "") %>%
   mutate(county = str_remove(ctyname, " County"),
-         fips = as.numeric(fips)) %>% 
+         fips = as.numeric(fips)) %>%
   select("fips", "county", "popestimate2021", "popestimate2022")
 head(county_population)
 
@@ -137,8 +137,8 @@ Below is an explanation of the variables in our dataset for the exploratory anal
 
 ```{r codebook, echo = FALSE, results = TRUE}
 
-Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K", "2021 case rank", "2022 case rank", "2022 cost rank")
-Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people", "rank of each county with one being the highest cases per 100k in 2021", "rank of each county with one being the highest cases per 100k in 2022", "rank of each county with one being the highest out of pocket healthcare cost in 2022")
+Variable  <- c("county","fips","average annual healthcare cost", "2021 average daily cases", "2022 average daily cases", "2021 population estimate", "2022 population estimate", "2021 cases per 100K", "2022 cases per 100K", "2021 case rank", "2022 case rank", "2022 cost rank")
+Definition <- c("county data was collected in", "unique code given to each county in the US", "annual out of pocket healthcare cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per county in 2021", "average daily new COVID-19 cases per county in 2022", "estimated population based on the 2020 census in 2021", "estimated population based on the 2020 census in 2022", "average daily new COVID-19 cases per 100,000 people in 2021", "average daily new COVID-19 cases per 100,000 people in 2022", "rank of each county with one being the highest cases per 100k in 2021", "rank of each county with one being the highest cases per 100k in 2022", "rank of each county with one being the highest out of pocket healthcare cost in 2022")
 d <- data.frame(Variable,Definition)
 knitr::kable(d)
 
@@ -285,17 +285,9 @@ mapcovidcases %>%
 However, it became evident that the high average daily case rate in Chattahoochee county was making this gradient incompatible with our design; since this county's case rate was much higher than every other county in Georgia, the gradient is unable to elucidate any geographic trends with any of our case data. Both 2021 and 2022 case variables have this problem, whereas the annual healthcare cost variable lacks an outlier to this extent, so its gradient reveals the possibility of a trend in higher healthcare costs in the Blue Ridge region of North Georgia (Northeast Corner) and possible trend of lower healthcare costs in Middle Georgia.
 In order to evade the complication of Chattahoochee county's skewing observation without removing the data point from the analysis, we found it necessary to plot the ranks of each county in each variable. By doing this, we are able to see the same trend of whether a county has a higher magnitude observation for case rate or healthcare cost in comparison to neighboring counties. This makes it possible to see any geographic/variable trends between our variables, as this gradient would be able to reveal whether counties of higher ranks (closer to 1) are close to each other AND if high rank counties for daily COVID rates are also high rank counties for annual healthcare cost. This allows for us to keep Chattahoochee county's COVID daily rate data without jeopardizing our ability to view trends in other significantly lower magnitude daily case rate counties.
 
-```{r creating RANK}
-
-maprankcovidcases <- mapcovidcases %>% 
-  select(-c("avg_cost_2022", "avg_daily_cases_2021", "avg_daily_cases_2022", "popestimate2021", "popestimate2022", "cases_per_100k_2021", "cases_per_100k_2022"))
-
-```
-
-
 ```{r map RANK, echo = FALSE, results = TRUE}
 
-maprankcovidcases %>%
+mapcovidcases %>%
   ggplot(aes(long, lat, group = group, fill = rank2021case)) +
   geom_polygon() +
   scale_fill_gradient(low="red", high="yellow")+
@@ -303,7 +295,7 @@ maprankcovidcases %>%
   theme_void() +
   labs(fill = "2021 County rank of Average Cases per 100k per Day")
 
-maprankcovidcases %>%
+mapcovidcases %>%
   ggplot(aes(long, lat, group = group, fill = rank2022case)) +
   geom_polygon() +
   scale_fill_gradient(low="red", high="yellow")+
@@ -311,7 +303,7 @@ maprankcovidcases %>%
   theme_void() +
   labs(fill = "2022 County rank of Average Cases per 100k per Day")
 
-maprankcovidcases %>%
+mapcovidcases %>%
   ggplot(aes(long, lat, group = group, fill = rank2022cost)) +
   geom_polygon(color=NA) +
   scale_fill_gradient(low="red", high="yellow")+
@@ -331,8 +323,7 @@ By being able to see how each county compares with each other on a local and sta
 | PolicyMap. (2022). *Average annual dollars spent out of pocket per person on medical care in 2022* [Data set]. PolicyMap.
 |      [https://www.policymap.com/](https://www.policymap.com/).
 
-| Strochak, S., Williams, A. R., & Ueyama, K. (2019). *urbnmapr* [Data set]. Urban Institute.
-|      [https://github.com/UrbanInstitute/urbnmapr](https://github.com/UrbanInstitute/urbnmapr).
+| Strochak, S., Williams, A. R., & Ueyama, K. (2019). *urbnmapr* [Data set]. Urban Institute. [https://github.com/UrbanInstitute/urbnmapr](https://github.com/UrbanInstitute/urbnmapr).
 
 | The New York Times. (2021). *Coronavirus (Covid-19) Data in the United States* [Data set]. The New York Times.
 |      [https://github.com/nytimes/covid-19-data](https://github.com/nytimes/covid-19-data).
