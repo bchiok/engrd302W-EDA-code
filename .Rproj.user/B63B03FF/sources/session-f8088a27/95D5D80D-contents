@@ -15,11 +15,11 @@ pacman::p_load(tidyverse, janitor, urbnmapr, stringr)
 
 ### Introduction
 
-The COVID-19 pandemic's impact on the US economy has been widely documented, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States. Our goal for this exploratory data analysis was to visualize key information about out of pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
+The documentation of the COVID-19 pandemic's impact on the US economy was a priority during the pandemic and still continues to be studied, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit, etc.). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States, particular when it comes to medical costs. Our goal for this exploratory data analysis was to visualize key information about out-of-pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
 
 #### **Out of Pocket Healthcare Costs**
 
-One of the main variables we are interested in is out of pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022).[Policy Map](https://www.policymap.com/) contains data pertaining to COVID-19 data on county, state/territory, and national levels in the United States. The website allows users to choose their denomination of interest and in some cases, their time frame of interest. We chose this site to be able to see county-wide data in Georgia and to have better control over the time frame of interest for our data, in this case 2022.
+One of the main variables we are interested in is out-of-pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022).[Policy Map](https://www.policymap.com/) contains data pertaining to COVID-19 data on county, state/territory, and national levels in the United States. The website allows users to choose their denomination of interest and in some cases, their time frame of interest. We chose this site to be able to see county-wide data in Georgia and to have better control over the time frame of interest for our data, in this case 2022.
 
 Below, we are downloading the dataset and selecting the information we need in order to do our analysis. This includes filtering the data to only include information from Georgia, renaming the variables to more intuitive names, and removing variables we are not interested in. This variable will ultimately describe the average annual out of pocket healthcare cost per person for each county in Georgia in 2022. We chose 2022 specifically in order to view the longitudinal effects of the pandemic (i.e. one year after peak COVID-19 case incidence rate) rather than the immediate effect of the pandemic, which might include observations of healthcare costs due primarily to COVID-19 itself (i.e. 2020).
 
@@ -40,15 +40,15 @@ head(avg_healthcare_costs_2022)
 
 #### **COVID-19 Cases**
 
-The other main data we are interested in exploring is related to COVID-19 cases. This data comes from journalists at the New York Times who pieced together this information from a variety of county, state, and national government sources. This data does have some limitations. Due to the rapidly changing nature of the COVID-19 pandemic, officials did not always report data in the most consistent way, but this would be true of any source reporting on COVID-19 cases.
+The other main data we are interested in exploring is related to COVID-19 cases. This data comes from journalists at the New York Times who pieced together this information from a variety of county, state, and national government sources. This data does have some limitations; due to the rapidly changing nature of the COVID-19 pandemic, officials did not always report data in the most consistent way. However, this would be true of almost any source reporting on COVID-19 cases.
 
 The variable we are particularly interested in gathering from this data is the number of new COVID-19 cases per day, which includes both confirmed and probable cases. There are also limitations with this data as the New York Times prioritized the accuracy of cumulative case counts over new daily cases, which causes some of the new daily cases to appear anomalous as it is derived from differences in cumulative cases from one day to another. Largely, the observations in this dataset provide an accurate estimate for the trends in COVID-19 case incidence in 2021 and 2022.
 
 (If you are interested in learning more about this dataset, the New York Times has published a [GitHub](https://github.com/nytimes/covid-19-data?tab=readme-ov-file#readme) with lots of data collected during the COVID-19 pandemic. The data used in our analysis comes specifically from the [Rolling Averages](https://github.com/nytimes/covid-19-data/tree/master/rolling-averages) file).
 
-The reason we chose this variable to focus on rather than a variable describing the cumulative cases per day, is due to the nature of our out of pocket healthcare cost variable. The out of pocket healthcare cost variable is an annual average. We wanted to make the COVID-19 case variable comparable, which means we would also need to have one number per county per year. The alternative was choosing one specific time period to compare our COVID-19 case data, which was a route we considered, but ultimately decided against since any small discrete time period (such as a week) introduces potential confounding on a county-to-county basis; we have no way to confirm that we can make a direct comparison between counties for any one week/month, but on a larger scale (year), we can be more confident of an equivalent comparison. If we utilized a cumulative variable, when we would average over the year, we would be counting the same case many times (since it includes the observations from previous days), but if we are focusing on new cases per day, we can get the average daily new cases per county. This value would make it easier to compare between counties with widely different populations, which we will discuss later.
+The reason we chose this variable to focus on rather than a variable describing the cumulative cases per day is due to the nature of our out-of-pocket healthcare cost variable. The out-of-pocket healthcare cost variable is an annual average. We wanted to make the COVID-19 case variable comparable, which means we would also need to have one observation per county per year. The alternative was choosing one specific time period to compare our COVID-19 case data, which was a route we considered, but ultimately decided against since any small discrete time period (such as a week) introduces potential confounding on a county-to-county basis; we have no way to confirm that we can make a direct comparison between counties for any one week/month, but on a larger scale (year), we can be more confident of an equivalent comparison. In this way, we are essentially increasing the sample size of days in trying to get a more accurate number for average daily COVID case rate over the span of the year. If we utilized a cumulative variable, when we would average over the year, we would be counting the same case many times (since it includes the observations from previous days), but since we are focusing on new cases per day, we can get the average daily new cases per county. This value would make it easier to compare between counties with widely different populations, which we will discuss later.
 
-Below, we are downloading the data and selecting the information needed for our analysis. This includes filtering so we only have the data for Georgia as well as standardizing the names of variables. In order for us to later make an average variable, it is necessary to have one row per county rather than one row per date.
+Below, we are downloading the data and selecting the information needed for our analysis. This includes filtering so we only have the data for Georgia as well as standardizing the names of variables. In order for us to later make an averaged variable, it is necessary to have one row per county rather than one row per date.
 
 ```{r cleaning 2021 cases}
 
@@ -79,7 +79,7 @@ head(covidcases_2022)
 
 #### **Population**
 
-Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. This is necessary to be able to compare counties like Gwinnett and Chattahochee, where Gwinnett has nearly 10 times the population of Chattahochee and would obviously have more COVID-19 cases as a result.  
+Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. This is necessary to be able to compare counties like Gwinnett and Chattahochee, where Gwinnett has nearly 10 times the population of Chattahochee and would obviously have more COVID-19 cases as a result. This incongruence in population is what motivated our standardization of average daily COVID case rate to be considered per 100K people   
 
 Below, we are downloading the data and selecting the variables of interest. This includes filtering for only data from Georgia counties and again standardizing the names of the variables.
 
@@ -118,12 +118,15 @@ head(covidcases_population)
 
 ```
 
-Lastly, we are joining the above dataset with our out of pocket healthcare data to ultimately have the dataset containing both of our primary interests: COVID-19 cases in 2021 and 2022 and out of pocket healthcare costs per county in Georgia.
+Lastly, we are joining the above dataset with our out-of-pocket healthcare data to ultimately have a dataset containing both of our primary interests: COVID-19 cases in 2021 and 2022 and out-of-pocket healthcare costs per county in Georgia. We are also adding a rank variable that we will explain at length when we map this data onto Georgia's county map.
 
 ```{r joining cases and cost}
 
 covid_healthcarecosts <- avg_healthcare_costs_2022 %>% 
-  left_join(covidcases_population, by = c("county", "fips"))
+  left_join(covidcases_population, by = c("county", "fips")) %>%
+  mutate(rank2021case=rank(-cases_per_100k_2021, ties.method="first"),
+         rank2022case=rank(-cases_per_100k_2022, ties.method="first"),
+         rank2022cost=rank(-avg_cost_2022, ties.method="first"))
 head(covid_healthcarecosts)
 
 ```
@@ -134,15 +137,15 @@ Below is an explanation of the variables in our dataset for the exploratory anal
 
 ```{r codebook, echo = FALSE, results = TRUE}
 
-# Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K", "2021 case rank", "2022 case rank", "2022 cost rank")
-# Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people", "rank of each county with one being the highest cases per 100k in 2021", "rank of each county with one being the highest cases per 100k in 2022", "rank of each county with one being the highest out of pocket healthcare cost in 2022")
-# d <- data.frame(Variable,Definition)
-# knitr::kable(d)
-
-Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K")
-Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people")
+Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K", "2021 case rank", "2022 case rank", "2022 cost rank")
+Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people", "rank of each county with one being the highest cases per 100k in 2021", "rank of each county with one being the highest cases per 100k in 2022", "rank of each county with one being the highest out of pocket healthcare cost in 2022")
 d <- data.frame(Variable,Definition)
 knitr::kable(d)
+
+# Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K")
+# Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people")
+# d <- data.frame(Variable,Definition)
+# knitr::kable(d)
 
 ```
 
@@ -209,7 +212,7 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = cases_per_100k_2021)) +
 
 ```
 
-In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was `r round(cases2021_sum[4], 1)` with a minimum of `r round(cases2021_sum[1], 1)` new cases per day per 100,000 people and a maximum of approximately `r round(cases2021_sum[6], 1)` new cases per day per 100,000 people. The median is approximately `r round(cases2021_sum[3], 1)` new cases per day per 100,000 people. Because the median is slightly smaller than the mean, this data is very slightly right skewed as shown by the histogram above, although it appears as though there is an outlier. It is likely that the data would be more centrally distributed if this outlier was removed.
+In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was `r round(cases2021_sum[4], 1)` with a minimum of `r round(cases2021_sum[1], 1)` new cases per day per 100,000 people and a maximum of approximately `r round(cases2021_sum[6], 1)` new cases per day per 100,000 people. The median is approximately `r round(cases2021_sum[3], 1)` new cases per day per 100,000 people. Because the median is slightly smaller than the mean, this data is very slightly right skewed as shown by the histogram above, although it appears as though there is an outlier. It is likely that the data would be more centrally distributed if this outlier was removed, but for the sake of exploring the dataset as it was provided to us, we opted to include the outlier.
 
 #### **New Daily COVID-19 Cases per 100K in 2022**
 
@@ -238,7 +241,7 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = cases_per_100k_2022)) +
 
 ```
 
-In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2022 was approximately `r round(cases2022_sum[4], 1)`, which is about 3 people less per 100,000 people than it was in 2021. There was a minimum of approximately `r round(cases2022_sum[1], 1)` new cases per day per 100,000 people, a maximum of approximately `r round(cases2022_sum[6], 1)` new cases per day per 100,000 people, and a median of approximately `r round(cases2022_sum[3], 1)`. The median is very slightly smaller than the mean, meaning there is a slight right-skew, although much like the 2021 data, there appears to be an outlier that is causing the skew. If the outlier were to be removed the data would be much more centrally distributed.
+In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2022 was approximately `r round(cases2022_sum[4], 1)`, which is about 3 people less per 100,000 people than it was in 2021. There was a minimum of approximately `r round(cases2022_sum[1], 1)` new cases per day per 100,000 people, a maximum of approximately `r round(cases2022_sum[6], 1)` new cases per day per 100,000 people, and a median of approximately `r round(cases2022_sum[3], 1)`. The median is very slightly smaller than the mean, meaning there is a slight right-skew, although much like the 2021 data, there appears to be an outlier that is causing the skew. If the outlier were to be removed the data would be much more centrally distributed. Just as was the case for the 2022 case data, we opted to keep the data to have a better idea of the data's nature as it was given to us.
 
 ---
 
@@ -284,15 +287,12 @@ mapcovidcases %>%
 
 ```
 
-However, it became evident that the high average daily case rate in Chattahochee county was making this gradient incompatible with our design; since this county's case rate was much higher than every other county in Georgia, the gradient is unable to elucidate any geographic trends with any of our case data. Both 2021 and 2022 case variables have this problem, whereas the annual healthcare cost variable lacks an outlier to this extent, so its gradient reveals the possibility of a trend in higher healthcare costs in the Blue Ridge region of North Georgia and possible trend of lower healthcare costs in Middle Georgia.
-In order to evade the complication of Chattahochee county's skewing observation without removing the data point from the analysis, we found it neccesary to plot the ranks of each county in each variable. By doing this, we are able to see the same trend of whether a county has a higher magnitude observation for case rate or healthcare cost in comparison to neighboring counties. This makes it possible to see any geographic/variable trends between our variables, as this gradient would be able to reveal whether counties of higher ranks (closer to 1) are close to each other AND if high rank counties for daily COVID rates are also high rank counties for annual healthcare cost. This allows for us to keep Chattahochee county's COVID daily rate data without jeopardizing our ability to view trends in other significantly lower magnitude daily case rate counties.
+However, it became evident that the high average daily case rate in Chattahoochee county was making this gradient incompatible with our design; since this county's case rate was much higher than every other county in Georgia, the gradient is unable to elucidate any geographic trends with any of our case data. Both 2021 and 2022 case variables have this problem, whereas the annual healthcare cost variable lacks an outlier to this extent, so its gradient reveals the possibility of a trend in higher healthcare costs in the Blue Ridge region of North Georgia (Northeast Corner) and possible trend of lower healthcare costs in Middle Georgia.
+In order to evade the complication of Chattahoochee county's skewing observation without removing the data point from the analysis, we found it necessary to plot the ranks of each county in each variable. By doing this, we are able to see the same trend of whether a county has a higher magnitude observation for case rate or healthcare cost in comparison to neighboring counties. This makes it possible to see any geographic/variable trends between our variables, as this gradient would be able to reveal whether counties of higher ranks (closer to 1) are close to each other AND if high rank counties for daily COVID rates are also high rank counties for annual healthcare cost. This allows for us to keep Chattahoochee county's COVID daily rate data without jeopardizing our ability to view trends in other significantly lower magnitude daily case rate counties.
 
 ```{r creating RANK}
 
 maprankcovidcases <- mapcovidcases %>% 
-mutate(rank2021case=rank(-cases_per_100k_2021, ties.method="first"),
-         rank2022case=rank(-cases_per_100k_2022, ties.method="first"),
-         rank2022cost=rank(-avg_cost_2022, ties.method="first")) %>% 
   select(-c("avg_cost_2022", "avg_daily_cases_2021", "avg_daily_cases_2022", "popestimate2021", "popestimate2022", "cases_per_100k_2021", "cases_per_100k_2022"))
 
 ```
@@ -325,7 +325,9 @@ maprankcovidcases %>%
   labs(fill = "2022 County rank of Annual Out of Pocket Healthcare Cost")
 ```
 
-Now, we can see the gradients intended effect of showing whether higher ranking counties lie geographically close to one another and if there is a trend between high rank counties for average daily COVID-19 case rate and annual out-of-pocket healthcare costs. In 2022, we can see that the majority of high magnitude daily COVID 19 rate per 100k is centralized somewhat in Southwest GA, with the Blue Ridge region of North Georgia being mostly moderate to low magnitude daily COVID 19 rate per 100k in comparison to the rest of the state. In constrast, the high magnitude values for 2022 annual out-of-pocket healthcare costs seems to be centralized in the Blue Ridge region (in congruence with the previous map's analysis). 2021 seemed to have a centralization of high case rate in NW Georgia (somewhat present in 2021) and SE Georgia, which is distinct from the 2022 data. In general, there is not an overlapping geographic trend elucidated by this analysis between daily case rate per 100k and annual out-of-pocket healthcare costs; in fact, there seems to be an opposite effect in the Blue Ridge region of North Georgia, though further statistical tests are required to see if this is indeed a statistical correlation.
+Now, we can see the gradient's intended effect of showing whether higher-ranking counties lie geographically close to one another and if there is a trend between high-rank counties for average daily COVID-19 case rate and annual out-of-pocket healthcare costs. In 2022, we can see that the majority of high magnitude daily COVID 19 rate per 100k is centralized somewhat in Southwest GA, with the Blue Ridge region of North Georgia being mostly moderate to low magnitude daily COVID 19 rate per 100k in comparison to the rest of the state. In constrast, the high magnitude values for 2022 annual out-of-pocket healthcare costs seems to be centralized in the Blue Ridge region (in congruence with the previous map's analysis). 2021 seemed to have a centralization of high case rate in NW Georgia (somewhat present in 2021) and SE Georgia, which is distinct from the 2022 data. In general, there is not an positive geographic trend between out-of-pocket cost and COVID case rate elucidated by this analysis; in fact, there seems to be an inverse effect in the Blue Ridge region of North Georgia, though further statistical tests are required to see if this is indeed a statistical correlation.
+
+By being able to see how each county compares with each other on a local and statewide scale, we have a better idea of the geographic trends present in Georgia counties for our three variables of interest. This preliminary visualization shows us how this data might be able to be used to reveal underlying policy/political reasons for any statistical correlation or lack thereof. 
 
 ---
 
