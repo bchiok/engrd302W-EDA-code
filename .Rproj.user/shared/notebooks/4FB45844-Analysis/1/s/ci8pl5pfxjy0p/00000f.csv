@@ -1,0 +1,5 @@
+"0",""
+"0","counties1 <-counties %>% "
+"0","  mutate(fips=as.numeric(county_fips))"
+"0","mapcovidcases <- left_join(covid_healthcarecosts, counties1, by=c(""fips""))"
+"0",""

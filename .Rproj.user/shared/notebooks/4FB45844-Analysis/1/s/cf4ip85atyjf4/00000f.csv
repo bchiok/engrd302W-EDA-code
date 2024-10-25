@@ -1,0 +1,7 @@
+"0",""
+"0","maprankcovidcases <- mapcovidcases %>% "
+"0","mutate(rank2021case=rank(-cases_per_100k_2021, ties.method=""first""),"
+"0","         rank2022case=rank(-cases_per_100k_2022, ties.method=""first""),"
+"0","         rank2022cost=rank(-avg_cost_2022, ties.method=""first"")) %>% "
+"0","  select(-c(""avg_cost_2022"", ""avg_daily_cases_2021"", ""avg_daily_cases_2022"", ""popestimate2021"", ""popestimate2022"", ""cases_per_100k_2021"", ""cases_per_100k_2022""))"
+"0",""

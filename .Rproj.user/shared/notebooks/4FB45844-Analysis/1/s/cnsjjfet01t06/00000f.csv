@@ -1,4 +1,0 @@
-"0",""
-"0","covid_cases_new <- covidcases2021_new %>% "
-"0","  left_join(covidcases2022_new, by = c(""county"", ""fips""))"
-"0",""
