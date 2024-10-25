@@ -1,7 +1,0 @@
-"0",""
-"0","covid_healthcarecosts <- avg_healthcare_costs_2022 %>% "
-"0","  left_join(covidcases_population, by = c(""county"", ""fips"")) %>%"
-"0","  mutate(rank2021case=rank(-cases_per_100k_2021, ties.method=""first""),"
-"0","         rank2022case=rank(-cases_per_100k_2022, ties.method=""first""),"
-"0","         rank2022cost=rank(-avg_cost_2022, ties.method=""first""))"
-"0","head(covid_healthcarecosts)"

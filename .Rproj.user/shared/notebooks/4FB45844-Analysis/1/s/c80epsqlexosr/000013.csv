@@ -1,5 +1,0 @@
-"0",""
-"0","Variable  <- c(""county"",""fips"",""average annual healthcare cost"", ""average daily cases"", ""population estimate"", ""cases per 100K"", ""2021 case rank"", ""2022 case rank"", ""2022 cost rank"")"
-"0","Definition <- c(""county data was collected in"", ""unique code given to each count in the US"", ""out of pocket cost per person in 2022 measured in US dollars"", ""average daily new COVID-19 cases per year"", ""estimated population per year"", ""average daily new COVID-19 cases per year per 100,000 people"", ""rank of each county with one being the highest cases per 100k in 2021"", ""rank of each county with one being the highest cases per 100k in 2022"", ""rank of each county with one being the highest out of pocket healthcare cost in 2022"")"
-"0","d <- data.frame(Variable,Definition)"
-"0","knitr::kable(d)"
