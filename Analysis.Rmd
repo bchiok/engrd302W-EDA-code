@@ -15,11 +15,11 @@ pacman::p_load(tidyverse, janitor, urbnmapr, stringr)
 
 ### Introduction
 
-The documentation of the COVID-19 pandemic's impact on the US economy was a priority during the pandemic and still continues to be studied, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit, etc.). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States, particular when it comes to medical costs. Our goal for this exploratory data analysis was to visualize key information about out-of-pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
+The documentation of the COVID-19 pandemic's impact on the US economy was a priority during the pandemic and still continues to be studied, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit, etc.). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States, particularly when it comes to medical costs. Our goal for this exploratory data analysis was to visualize key information about out-of-pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
 
 #### **Out of Pocket Healthcare Costs**
 
-One of the main variables we are interested in is out-of-pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022).[Policy Map](https://www.policymap.com/) contains data pertaining to COVID-19 data on county, state/territory, and national levels in the United States. The website allows users to choose their denomination of interest and in some cases, their time frame of interest. We chose this site to be able to see county-wide data in Georgia and to have better control over the time frame of interest for our data, in this case 2022.
+One of the main variables we are interested in is out-of-pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). [Policy Map](https://www.policymap.com/) contains data pertaining to COVID-19 data on county, state/territory, and national levels in the United States. The website allows users to choose their denomination of interest and in some cases, their time frame of interest. We chose this site to be able to see county-wide data in Georgia and to have better control over the time frame of interest for our data, in this case 2022.
 
 Below, we are downloading the dataset and selecting the information we need in order to do our analysis. This includes filtering the data to only include information from Georgia, renaming the variables to more intuitive names, and removing variables we are not interested in. This variable will ultimately describe the average annual out of pocket healthcare cost per person for each county in Georgia in 2022. We chose 2022 specifically in order to view the longitudinal effects of the pandemic (i.e. one year after peak COVID-19 case incidence rate) rather than the immediate effect of the pandemic, which might include observations of healthcare costs due primarily to COVID-19 itself (i.e. 2020).
 
@@ -79,7 +79,7 @@ head(covidcases_2022)
 
 #### **Population**
 
-Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. This is necessary to be able to compare counties like Gwinnett and Chattahochee, where Gwinnett has nearly 10 times the population of Chattahochee and would obviously have more COVID-19 cases as a result. This incongruence in population is what motivated our standardization of average daily COVID case rate to be considered per 100K people   
+Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. This is necessary to be able to compare counties like Gwinnett and Chattahoochee, where Gwinnett has nearly 10 times the population of Chattahoochee and would obviously have more COVID-19 cases as a result. This incongruence in population is what motivated our standardization of average daily COVID case rate to be considered per 100K people   
 
 Below, we are downloading the data and selecting the variables of interest. This includes filtering for only data from Georgia counties and again standardizing the names of the variables.
 
@@ -142,11 +142,6 @@ Definition <- c("county data was collected in", "unique code given to each count
 d <- data.frame(Variable,Definition)
 knitr::kable(d)
 
-# Variable  <- c("county","fips","average annual healthcare cost", "average daily cases", "population estimate", "cases per 100K")
-# Definition <- c("county data was collected in", "unique code given to each count in the US", "out of pocket cost per person in 2022 measured in US dollars", "average daily new COVID-19 cases per year", "estimated population per year", "average daily new COVID-19 cases per year per 100,000 people")
-# d <- data.frame(Variable,Definition)
-# knitr::kable(d)
-
 ```
 
 
@@ -183,7 +178,7 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = avg_cost_2022)) +
 
 ```
 
-In 2022, across Georgia, the mean out of pocket healthcare cost per individual was approximately $`r round(cost_sum[4],0)` with a minimum of $`r cost_sum[1]` and a maximum of $`r cost_sum[6]` spend per person. The median was $`r cost_sum[3]`. With the median slightly less than the mean, this data is slightly right skewed as also shown on the hisogram above.
+In 2022, across Georgia, the mean out of pocket healthcare cost per individual was approximately $`r round(cost_sum[4],0)` with a minimum of $`r cost_sum[1]` and a maximum of $`r cost_sum[6]` spend per person. The median was $`r cost_sum[3]`. With the median slightly less than the mean, this data is slightly right skewed as also shown on the histogram above.
 
 #### **New Daily COVID-19 Cases per 100K in 2021**
 
@@ -212,7 +207,7 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = cases_per_100k_2021)) +
 
 ```
 
-In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was `r round(cases2021_sum[4], 1)` with a minimum of `r round(cases2021_sum[1], 1)` new cases per day per 100,000 people and a maximum of approximately `r round(cases2021_sum[6], 1)` new cases per day per 100,000 people. The median is approximately `r round(cases2021_sum[3], 1)` new cases per day per 100,000 people. Because the median is slightly smaller than the mean, this data is very slightly right skewed as shown by the histogram above, although it appears as though there is an outlier. It is likely that the data would be more centrally distributed if this outlier was removed, but for the sake of exploring the dataset as it was provided to us, we opted to include the outlier.
+In 2021, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was `r round(cases2021_sum[4], 1)` with a minimum of `r round(cases2021_sum[1], 1)` new cases per day per 100,000 people and a maximum of approximately `r round(cases2021_sum[6], 1)` new cases per day per 100,000 people. The median is approximately `r round(cases2021_sum[3], 1)` new cases per day per 100,000 people. Because the median is slightly smaller than the mean, this data is very slightly right skewed as shown by the histogram above, although it appears as though there is an outlier. It is likely that the data would be more centrally distributed if this outlier was removed, but for the sake of exploring the dataset as it was provided to us, we opted to include the outlier.
 
 #### **New Daily COVID-19 Cases per 100K in 2022**
 
@@ -325,7 +320,7 @@ maprankcovidcases %>%
   labs(fill = "2022 County rank of Annual Out of Pocket Healthcare Cost")
 ```
 
-Now, we can see the gradient's intended effect of showing whether higher-ranking counties lie geographically close to one another and if there is a trend between high-rank counties for average daily COVID-19 case rate and annual out-of-pocket healthcare costs. In 2022, we can see that the majority of high magnitude daily COVID 19 rate per 100k is centralized somewhat in Southwest GA, with the Blue Ridge region of North Georgia being mostly moderate to low magnitude daily COVID 19 rate per 100k in comparison to the rest of the state. In constrast, the high magnitude values for 2022 annual out-of-pocket healthcare costs seems to be centralized in the Blue Ridge region (in congruence with the previous map's analysis). 2021 seemed to have a centralization of high case rate in NW Georgia (somewhat present in 2021) and SE Georgia, which is distinct from the 2022 data. In general, there is not an positive geographic trend between out-of-pocket cost and COVID case rate elucidated by this analysis; in fact, there seems to be an inverse effect in the Blue Ridge region of North Georgia, though further statistical tests are required to see if this is indeed a statistical correlation.
+Now, we can see the gradient's intended effect of showing whether higher-ranking counties lie geographically close to one another and if there is a trend between high-ranking counties for average daily COVID-19 case rate and annual out-of-pocket healthcare costs. In 2022, we can see that the majority of high magnitude daily COVID 19 rate per 100k is centralized somewhat in Southwest GA, with the Blue Ridge region of North Georgia being mostly moderate to low magnitude daily COVID 19 rate per 100k in comparison to the rest of the state. In contrast, the high magnitude values for 2022 annual out-of-pocket healthcare costs seems to be centralized in the Blue Ridge region (in congruence with the previous map's analysis). 2021 seemed to have a centralization of high case rate in NW Georgia (somewhat present in 2021) and SE Georgia, which is distinct from the 2022 data. In general, there is not an positive geographic trend between out-of-pocket cost and COVID case rate elucidated by this analysis; in fact, there seems to be an inverse effect in the Blue Ridge region of North Georgia, though further statistical tests are required to see if this is indeed a statistical correlation.
 
 By being able to see how each county compares with each other on a local and statewide scale, we have a better idea of the geographic trends present in Georgia counties for our three variables of interest. This preliminary visualization shows us how this data might be able to be used to reveal underlying policy/political reasons for any statistical correlation or lack thereof. 
 
