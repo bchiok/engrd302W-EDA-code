@@ -332,7 +332,35 @@ By being able to see how each county compares with each other on a local and sta
 |      *of the Components of Resident Population Change for States and Counties: April 1, 2020 to July 1, 2023* [Data set]. United States Census
 |      Bureau. [https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html).
 
+```{r Correlation}
+cor1 <- cor(covid_healthcarecosts$cases_per_100k_2021, covid_healthcarecosts$avg_cost_2022)
+print(cor1)
+cor2 <- cor(covid_healthcarecosts$cases_per_100k_2022, covid_healthcarecosts$avg_cost_2022)
+print(cor2)
 
+cor3 <- cor(covid_healthcarecosts$rank2021case, covid_healthcarecosts$rank2022cost)
+print(cor3)
+cor4 <- cor(covid_healthcarecosts$rank2022case, covid_healthcarecosts$rank2022cost)
+print(cor4)
+
+```
+
+```{r analysis}
+
+mlr <- lm(avg_cost_2022 ~ cases_per_100k_2021 * cases_per_100k_2022, data = covid_healthcarecosts)
+summary(mlr)
+
+covid_healthcarecosts %>% 
+  mutate(rank2021case = factor(rank2021case),
+         rank2022case = factor(rank2022case))
+
+mlr_rank <- lm(avg_cost_2022 ~ rank2021case * rank2022case, data = covid_healthcarecosts)
+summary (mlr_rank)
+
+model <- aov(avg_cost_2022 ~ rank2021case * rank2022case, data = covid_healthcarecosts)
+summary(model)
+
+```
 
 
 
