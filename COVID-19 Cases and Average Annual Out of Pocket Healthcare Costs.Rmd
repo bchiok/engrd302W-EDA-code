@@ -15,9 +15,13 @@ pacman::p_load(tidyverse, janitor, urbnmapr, stringr, robustbase, car, jtools)
 
 ### Introduction
 
-The documentation of the COVID-19 pandemic's impact on the US economy was a priority during the pandemic and still continues to be studied, but much of the data collected pertains to how the pandemic affected larger systems of financial holdings (the stock market, US budget deficit, etc.). A somewhat under-reported data category is the lasting impact of the pandemic on the finances of individuals within the United States, particularly when it comes to medical costs. Our goal for this exploratory data analysis was to visualize key information about out-of-pocket healthcare costs and COVID-19 cases in Georgia to see if higher incidences of COVID-19 cases correspond with any changes in out of pocket healthcare costs. In order to do this, we utilized parts of three different datasets. 
+The COVID-19 pandemic has been a research interest for finance and health researchers alike since the first wave of cases over four years ago. Early works have predicted how the pandemic would affect the healthcare industry, particularly with revenue loss associated with travel/social distancing restrictions (Barnett et al., 2020). As health professionals have gained a better understanding of the pandemic, researchers from the Centers for Disease Control and Prevention (CDC) have pursued studies on the persistent health impacts associated with positive COVID-19 tests (Wanga et al., 2021). Other investigations of the pandemic's financial impact in the years to follow focus primarily on how the costs related to COVID-19 might affect the profitability of hospitals (Li et al., 2023), yet this top-down macroeconomic approach to evaluating the financial burden of the pandemic potentially neglects the typical household impact that a high incidence of COVID-19 cases might pose. Studies into the typical cost of a COVID-19-related hospital visit give insight into the direct impact of the pandemic on insured individuals (Pike et al., 2023), but focusing on only insured individuals misrepresents many localities where COVID-19 cases were high and insurance-covered populations were low (McCain et al., 2022). Furthermore, the direct cost of hospital visits from COVID-19 is less telling of the aforementioned longitudinal effects that populations with high COVID-19 rates might experience. That is why this research project will focus on examining COVID-19 cases from 2021 and 2022 and their impact on out-of-pocket healthcare costs in 2022.
 
-#### **Out of Pocket Healthcare Costs**
+We decided to only focus on counties in Georgia in order to keep the scope of the project manageable and not muddy the analysis with too broad of a research question. Georgia was a state at the forefront of COVID-19 news, especially at the beginning of the pandemic. Governor Brian Kemp was one of the last governors to enact a statewide shelter in place order at the very beginning of the pandemic and one of the first to reopen businesses towards the end of April, 2020 (Cillizza, 2020). Additionally, Georgia ranks among the worst in regards to healthcare access. As of 2023, 15.6% of adults in Georgia went without care due to how much it would cost compared to the national average of 11.7% (The Commonwealth Fund, 2023). Georgia also had the third highest percentage of residents who lack health insurance coverage compared to other states (Masterson, 2023), which means more Georgia residents would have to pay out of pocket for healthcare costs compared to residents in a majority of other states. Keeping this in mind, it is important to understand how the COVID-19 pandemic has affected out of pocket healthcare costs in Georgia specifically due to the state of healthcare access in the state already.
+
+To complete this analysis, we utilized parts of three different datasets as we were not able to find one dataset that included all of the necessary information to answer our research question: **What is the relationship between COVID-19 cases and Out of Pocket Healthcare Costs in Georgia, USA?**
+
+#### **Outcome Variable: Out of Pocket Healthcare Costs**
 
 One of the main variables we are interested in is out-of-pocket healthcare costs. We downloaded the data from [Policy Map](https://www.policymap.com/), but this information is from the Department of Health and Human Services' Agency for Healthcare Research and Quality (AHRQ) Medical Expenditure Panel Survey (2022) with demographic and health data from the U.S. Census American Community Survey (2018-2022). [Policy Map](https://www.policymap.com/) contains data pertaining to COVID-19 data on county, state/territory, and national levels in the United States. The website allows users to choose their denomination of interest and in some cases, their time frame of interest. We chose this site to be able to see county-wide data in Georgia and to have better control over the time frame of interest for our data, in this case 2022.
 
@@ -38,7 +42,7 @@ head(avg_healthcare_costs_2022)
 
 ```
 
-#### **COVID-19 Cases**
+#### **Independent Variable: COVID-19 Cases**
 
 The other main data we are interested in exploring is related to COVID-19 cases. This data comes from journalists at the New York Times who pieced together this information from a variety of county, state, and national government sources. This data does have some limitations; due to the rapidly changing nature of the COVID-19 pandemic, officials did not always report data in the most consistent way. However, this would be true of almost any source reporting on COVID-19 cases.
 
@@ -77,7 +81,7 @@ head(covidcases_2022)
 
 ```
 
-#### **Population**
+##### **Population**
 
 Lastly, we decided that in order for there to be a fair comparison, we needed to account for population in regard to COVID-19 cases. This last dataset we are utilizing is from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html). This contains population estimates for every county in Georgia based on the 2020 census and accounting for births, deaths, and immigration information per year. This is necessary to be able to compare counties like Gwinnett and Chattahoochee, where Gwinnett has nearly 10 times the population of Chattahoochee and would obviously have more COVID-19 cases as a result. This incongruence in population is what motivated our standardization of average daily COVID case rate to be considered per 100K people   
 
@@ -497,15 +501,41 @@ plot_summs(model_rank_robust)
 Our regression analysis indicates that when rank of county increased by one in regard to the average COVID-19 cases in 2021, average annual out of pocket healthcare cost in 2022 increased by approximately 11 cents when keeping 2022 covid-19 case rank constant. The 2021 data was not statistically significant at a p-value of 0.05. On the other hand, when rank of county increased by one in regard to the average COVID-19 cases in 2022, average annual out of pocket healthcare cost in 2022 increased by approximately 48 cents when keeping 2021 covid-19 case rank constant. This was statistically significant at a p-value of 0.05, but not very relevant in actuality due to the increase in average annual out of pocket healthcare costs per person being by less than half a dollar for each rank increase. 
 
 ### References
+| Barnett, M. L., Mehrotra, A., & Landon, B. E. (2020). Covid-19 and the upcoming financial crisis in health care. *NEJM Catalyst, 1*(2). 
+|      [https://doi.org/10.1056/CAT.20.0153](https://doi.org/10.1056/CAT.20.0153).
+
+| Cillizza, C. (2020, April 21). *Inside the Georgia governor's hugely high-stakes coronavirus gamble*. CNN.
+|      [https://www.cnn.com/2020/04/21/politics/brian-kemp-georgia-reopen-coronavirus/index.html](https://www.cnn.com/2020/04/21/politics/brian-kemp-georgia-reopen-coronavirus/index.html).
+
+| The Commonwealth Fund. (2023). *Georgia performance data*.
+|      [https://www.commonwealthfund.org/datacenter/georgia#:~:text=%2344%20Georgia's%202022%20Rank,Georgia%20ranked%20%2344%20this%20year](https://www.commonwealthfund.org/datacenter/georgia#:~:text=%2344%20Georgia's%202022%20Rank,Georgia%20ranked%20%2344%20this%20year).
+
+| Li, K., Al-Amin, M., & Rosko, M. D. (2023). Early financial impact of the COVID-19 pandemic on U.S. hospitals. *Journal of Healthcare Management *
+|      */ American College of Healthcare Executives, 68*(4), 268-283. [https://doi.org/10.1097/JHM-D-22-00175](https://doi.org/10.1097/JHM-D-22-00175).
+
+| Masterson, L. (2023, October 13). *The worst (and best) states for healthcare, ranked*. Forbes Advisor.
+|      [https://www.forbes.com/advisor/health-insurance/best-worst-states-for-healthcare/](https://www.forbes.com/advisor/health-insurance/best-worst-states-for-healthcare/).
+
+| McCain, J. L., Wang, X., Connell, K., & Morgan, J. (2022). Assessing the impact of insurance type on COVID-19 mortality in black and white
+|      patients in the largest healthcare system in the state of Georgia. *Journal of the National Medical Association, 114*(2), 218-226.
+|      [https://doi.org/10.1016/j.jnma.2022.01.002](https://doi.org/10.1016/j.jnma.2022.01.002).
+
+| The New York Times. (2021). *Coronavirus (Covid-19) Data in the United States* [Data set]. The New York Times.
+|      [https://github.com/nytimes/covid-19-data](https://github.com/nytimes/covid-19-data).
+
+| Pike, J., Kompaniyets, L., Lindley, M. C., Saydah, S., & Miller, G. (2023). Direct medical costs associated with post-COVID-19 conditions among
+|      privately insured children and adults. *Preventing Chronic Disease, 20*(220292). [http://dx.doi.org/10.5888/pcd20.220292](http://dx.doi.org/10.5888/pcd20.220292).
 
 | PolicyMap. (2022). *Average annual dollars spent out of pocket per person on medical care in 2022* [Data set]. PolicyMap.
 |      [https://www.policymap.com/](https://www.policymap.com/).
 
 | Strochak, S., Williams, A. R., & Ueyama, K. (2019). *urbnmapr* [Data set]. Urban Institute. [https://github.com/UrbanInstitute/urbnmapr](https://github.com/UrbanInstitute/urbnmapr).
 
-| The New York Times. (2021). *Coronavirus (Covid-19) Data in the United States* [Data set]. The New York Times.
-|      [https://github.com/nytimes/covid-19-data](https://github.com/nytimes/covid-19-data).
-
 | United States Census Bureau. (2024). *Annual Resident Population Estimates, Estimated Components of Resident Population Change, and Rates*
 |      *of the Components of Resident Population Change for States and Counties: April 1, 2020 to July 1, 2023* [Data set]. United States Census
 |      Bureau. [https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html).
+
+| Wanga, V., Chevinsky, J. R., Dimitrov, L. V., Gerdes, M. E., Whitfield, G. P., Bonacci, R. A., Nji, M. A. M., Hernandez-Romieu, A. C., Rogers-Brown,
+|      J. S., McLeod, T., Rushmore, J., Lutfy, C., Bushman, D., Koumans, E., Saydah, S., Goodman, A. B., King, S. M. C., Jackson, B. R., & Cope, 
+|      J. R. (2021). Long-term symptoms among adults tested for SARS-CoV-2-United States, January 2020-April 2021. *MMWR Morb Mortal Wkly,*
+|      *70*(36), 1235-1241.
