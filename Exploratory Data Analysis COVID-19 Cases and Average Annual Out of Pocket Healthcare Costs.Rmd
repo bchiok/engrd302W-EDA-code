@@ -1,14 +1,14 @@
 ---
-title: "Exploratory Data Analysis: COVID-19 Cases and Average Annual Out of Pocket Healthcare Costs"
-author: "Ben, Emma, and Felix"
-date: "2024-10-25"
+title: "COVID-19 Cases and Average Annual Out of Pocket Healthcare Costs"
+author: "Ben and Emma"
+date: "2024-12-10"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-pacman::p_load(tidyverse, janitor, urbnmapr, stringr)
+pacman::p_load(tidyverse, janitor, urbnmapr, stringr, robustbase, car, jtools)
 
 
 ```
@@ -151,7 +151,7 @@ knitr::kable(d)
 
 To start our data analysis, we first wanted to observe the spread and central tendency measures of our key variables.
 
-#### **Out of Pocket Healthcare Costs in 2022**
+#### **Outcome: Out of Pocket Healthcare Costs in 2022**
 
 ```{r cost summary, include = FALSE}
 
@@ -166,7 +166,7 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = avg_cost_2022)) +
   geom_histogram(fill = "white", color = "black", bins = 8) +
   labs(title = "Distribution of Average Annual Out of Pocket \nHealthcare Costs per Person",
        subtitle = "Georgia, USA",
-       x = "",
+       x = "Average Annual Out of Pocket Healthcare Costs per Person in US$",
        y = "Number of Counties") +
   theme_minimal() +
   theme(axis.text.x = element_text(face = "bold"),
@@ -176,11 +176,16 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = avg_cost_2022)) +
     panel.background = element_rect(fill = "aliceblue"),  # Add light blue background
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
 
+
 ```
 
 In 2022, across Georgia, the mean out of pocket healthcare cost per individual was approximately $`r round(cost_sum[4],0)` with a minimum of $`r cost_sum[1]` and a maximum of $`r cost_sum[6]` spend per person. The median was $`r cost_sum[3]`. With the median slightly less than the mean, this data is slightly right skewed as also shown on the histogram above.
 
-#### **New Daily COVID-19 Cases per 100K in 2021**
+#### **Independent Variables**
+
+For our independent variables we also wanted to analyze their correlation with the outcome variable of average annual out of pocket healthcare costs per person.
+
+##### **New Daily COVID-19 Cases per 100K in 2021**
 
 ```{r cases 2021 summary, include = FALSE}
 
@@ -209,7 +214,71 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = cases_per_100k_2021)) +
 
 In 2021, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2021 was `r round(cases2021_sum[4], 1)` with a minimum of `r round(cases2021_sum[1], 1)` new cases per day per 100,000 people and a maximum of approximately `r round(cases2021_sum[6], 1)` new cases per day per 100,000 people. The median is approximately `r round(cases2021_sum[3], 1)` new cases per day per 100,000 people. Because the median is slightly smaller than the mean, this data is very slightly right skewed as shown by the histogram above, although it appears as though there is an outlier. It is likely that the data would be more centrally distributed if this outlier was removed, but for the sake of exploring the dataset as it was provided to us, we opted to include the outlier.
 
-#### **New Daily COVID-19 Cases per 100K in 2022**
+```{r cases 2021 cor, include = FALSE}
+
+cor1 <- cor(covid_healthcarecosts$cases_per_100k_2021, covid_healthcarecosts$avg_cost_2022)
+
+cor1test <- cor.test(covid_healthcarecosts$cases_per_100k_2021, covid_healthcarecosts$avg_cost_2022)
+
+```
+
+```{r cases 2021 cor graph, echo = FALSE, results = TRUE}
+
+ggplot(data = covid_healthcarecosts, aes(x=cases_per_100k_2021, y=avg_cost_2022)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red", size = 1.5) +  # Custom line of best fit
+  annotate("text", x = 50, y = 1400, label = paste("Correlation:", round(cor1, 2), " (p-value:", round(cor1test$p.value, 3),")"),
+           color = "black", size = 4, fontface = "bold") +
+labs(title = "2021 COVID-19 Cases",
+       x = "Average New COVID-19 Cases per Day per 100k",
+       y = "Average Out of Pocket Healthcare Costs") + 
+  theme_minimal() +
+  theme(axis.text.x=element_text(face = "bold", size = 12), 
+    axis.text.y = element_text(face = "bold", size = 12),  
+    axis.title = element_text(face = "bold", size = 14),  
+    panel.grid.major = element_line(color = "lightgray"),
+    panel.background = element_rect(fill = "aliceblue"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+
+```
+The correlation between average new COVID-19 cases per day per 100,000 people in 2021 and average annual out of pocket healthcare costs per person was `r round(cor1, 2)` which was significant at a p-value of 0.05 (p-value: `r round(cor1test$p.value, 3)`). The correlation coefficient reveals that there is a relatively weak negative association between these two variables. As you can see in the graph, there is one major outlier which has heavily impacted the direction of the relationship.
+
+##### **Rank of Counties Based on 2021 COVID-19 Cases**
+
+For the ranked variables, it is not necessary to view the distribution because only one county is assigned to each rank.
+
+```{r cases 2021 ranked cor, include = FALSE}
+
+cor3 <- cor(covid_healthcarecosts$rank2021case, covid_healthcarecosts$avg_cost_2022)
+print(cor3)
+cor3test <- cor.test(covid_healthcarecosts$rank2021case, covid_healthcarecosts$avg_cost_2022)
+print(cor3test)
+
+```
+
+```{r cases 2021 ranked cor graph, echo = FALSE, results = TRUE}
+
+ggplot(data = covid_healthcarecosts, aes(x=rank2021case, y=avg_cost_2022)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red", size = 1.5) +  # Custom line of best fit
+  annotate("text", x = 50, y = 1400, label = paste("Correlation:", round(cor3, 2), " (p-value:", round(cor3test$p.value, 3),")"),
+           color = "black", size = 4, fontface = "bold") +
+labs(title = "2021 COVID-19 Cases",
+       x = "County Rank",
+       y = "Average Out of Pocket Healthcare Costs in US$") + 
+  theme_minimal() +
+ theme(axis.text.x = element_text(face = "bold", size = 12), 
+    axis.text.y = element_text(face = "bold", size = 12),  
+    axis.title = element_text(face = "bold", size = 14),  
+    panel.grid.major = element_line(color = "lightgray"),
+    panel.background = element_rect(fill = "aliceblue"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+
+```
+
+The correlation between county ranks for the average new COVID-19 cases per day per 100,000 people in 2021 and average annual out of pocket healthcare costs per person was `r round(cor3, 2)` which was significant at a p-value of 0.05 (p-value: `r round(cor3test$p.value, 3)`). The correlation coefficient reveals that there is a relatively weak positive association between these two variables. As you can see in the graph, there is no longer a major outlier heavily influencing the direction of the relationship. A positive association makes more logical sense with the variables as it would be unlikely having more COVID-19 cases would decrease the out of pocket healthcare costs per person.
+
+##### **New Daily COVID-19 Cases per 100K in 2022**
 
 ```{r cases 2022 summary, include = FALSE}
 
@@ -237,6 +306,70 @@ ggplot(data = covid_healthcarecosts, mapping = aes(x = cases_per_100k_2022)) +
 ```
 
 In 2022, across Georgia, the mean average new COVID-19 cases per day per 100,000 people for all of Georgia in 2022 was approximately `r round(cases2022_sum[4], 1)`, which is about 3 people less per 100,000 people than it was in 2021. There was a minimum of approximately `r round(cases2022_sum[1], 1)` new cases per day per 100,000 people, a maximum of approximately `r round(cases2022_sum[6], 1)` new cases per day per 100,000 people, and a median of approximately `r round(cases2022_sum[3], 1)`. The median is very slightly smaller than the mean, meaning there is a slight right-skew, although much like the 2021 data, there appears to be an outlier that is causing the skew. If the outlier were to be removed the data would be much more centrally distributed. Just as was the case for the 2022 case data, we opted to keep the data to have a better idea of the data's nature as it was given to us.
+
+```{r cases 2022 cor, include = FALSE}
+
+cor2 <- cor(covid_healthcarecosts$cases_per_100k_2022, covid_healthcarecosts$avg_cost_2022)
+print(cor2)
+cor2test <- cor.test(covid_healthcarecosts$cases_per_100k_2022, covid_healthcarecosts$avg_cost_2022)
+print(cor2test)
+
+```
+
+```{r cases 2022 cor graph, echo = FALSE, results = TRUE}
+
+ggplot(data = covid_healthcarecosts, aes(x=cases_per_100k_2022, y=avg_cost_2022)) +
+  geom_point() +
+ geom_smooth(method = "lm", se = FALSE, color = "red", size = 1.5) +  # Custom line of best fit
+  annotate("text", x = 50, y = 1400, label = paste("Correlation:", round(cor2, 2), " (p-value:", round(cor2test$p.value, 3),")"),
+           color = "black", size = 4, fontface = "bold") +
+labs(title = "2022 COVID-19 cases",
+       x = "Average New COVID-19 Cases per Day per 100k",
+       y = "Average Out of Pocket Healthcare Costs") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(face = "bold", size = 12), 
+    axis.text.y = element_text(face = "bold", size = 12),  
+    axis.title = element_text(face = "bold", size = 14),  
+    panel.grid.major = element_line(color = "lightgray"),
+    panel.background = element_rect(fill = "aliceblue"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+
+```
+
+The correlation between average new COVID-19 cases per day per 100,000 people in 2022 and average annual out of pocket healthcare costs per person was `r round(cor2, 2)` which was significant at a p-value of 0.05 (p-value: `r round(cor2test$p.value, 3)`). The correlation coefficient reveals that there is a relatively weak negative association between these two variables. Similarly to the 2021 cases, you can see in the graph that there is one major outlier which has heavily impacted the direction of the relationship.
+
+##### **Rank of Counties Based on 2022 COVID-19 Cases**
+
+```{r cases 2022 ranked cor, include = FALSE}
+
+cor4 <- cor(covid_healthcarecosts$rank2022case, covid_healthcarecosts$avg_cost_2022)
+print(cor4)
+cor4test <- cor.test(covid_healthcarecosts$rank2022case, covid_healthcarecosts$avg_cost_2022)
+print(cor4test)
+
+```
+
+```{r cases 2022 ranked cor graph, echo = FALSE, results = TRUE}
+
+ggplot(data = covid_healthcarecosts, aes(x=rank2022case, y=avg_cost_2022)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red", size = 1.5) + 
+  annotate("text", x = 50, y = 1400, label = paste("Correlation:", round(cor4, 2), " (p-value:", round(cor4test$p.value, 3),")"),
+           color = "black", size = 4, fontface = "bold") +
+labs(title = "2022 COVID-19 Cases",
+       x = "County Rank",
+       y = "Average Out of Pocket Healthcare Costs in US$") + 
+  theme_minimal() +
+   theme(axis.text.x = element_text(face = "bold", size = 12), 
+    axis.text.y = element_text(face = "bold", size = 12),  
+    axis.title = element_text(face = "bold", size = 14),  
+    panel.grid.major = element_line(color = "lightgray"),
+    panel.background = element_rect(fill = "aliceblue"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+
+```
+
+The correlation between county ranks for the average new COVID-19 cases per day per 100,000 people in 2022 and average annual out of pocket healthcare costs per person was `r round(cor4, 2)` which was significant at a p-value of 0.05 (p-value: `r round(cor4test$p.value, 3)`). The correlation coefficient reveals that there is a relatively weak positive association between these two variables. Similarly to the ranked cases in 2021, you can see in the graph that there is no longer a major outlier heavily influencing the direction of the relationship. Again, a positive association makes more logical sense with the variables as it would be unlikely having more COVID-19 cases would decrease the out of pocket healthcare costs per person.
 
 ---
 
@@ -318,6 +451,51 @@ By being able to see how each county compares with each other on a local and sta
 
 ---
 
+### Correlation Analysis
+
+In order to 
+
+### Regression Analysis
+
+We finally wanted to see if our COVID-19 cases variables are predictive of the average out of pocket healthcare costs per person. In order to do this we are utilizing multiple linear regression. Due to the outlier present in the non-ranked COVID-19 cases variables, the assumptions of multiple linear regression are violated. The outlier causes the residuals of the regression analysis to have non-constant variance as seen below.
+
+```{r mlr, include=FALSE}
+
+mlr <- lm(avg_cost_2022 ~ cases_per_100k_2021 * cases_per_100k_2022, data = covid_healthcarecosts)
+summary(mlr)
+
+residuals <- resid(mlr)
+fitted_values <- fitted(mlr)
+
+# Create the residual plot
+ggplot(data = data.frame(fitted_values, residuals), aes(x = fitted_values, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_minimal()
+
+```
+
+Since there is no evidence that the outliers in the data are due to human error, we cannot justify removing them to perform our analysis. Instead, we will utilize our ranked case variables and robust linear regression. Robust linear regression is less susceptible to issues regarding violations to the constant variance of residuals assumption, so it is more suitable for our data.
+
+```{r rank regression set up, include=FALSE}
+
+covid_healthcarecosts %>%
+  mutate(rank2021case = factor(rank2021case),
+         rank2022case = factor(rank2022case))
+
+model_rank_robust <- lmrob(avg_cost_2022 ~ rank2021case + rank2022case, data = covid_healthcarecosts)
+```
+
+
+```{r rank regression plot, echo=FALSE, results=TRUE}
+
+plot_summs(model_rank_robust)
+
+```
+
+Our regression analysis indicates that when rank of county increased by one in regard to the average COVID-19 cases in 2021, average annual out of pocket healthcare cost in 2022 increased by approximately 11 cents when keeping 2022 covid-19 case rank constant. The 2021 data was not statistically significant at a p-value of 0.05. On the other hand, when rank of county increased by one in regard to the average COVID-19 cases in 2022, average annual out of pocket healthcare cost in 2022 increased by approximately 48 cents when keeping 2021 covid-19 case rank constant. This was statistically significant at a p-value of 0.05, but not very relevant in actuality due to the increase in average annual out of pocket healthcare costs per person being by less than half a dollar for each rank increase. 
+
 ### References
 
 | PolicyMap. (2022). *Average annual dollars spent out of pocket per person on medical care in 2022* [Data set]. PolicyMap.
@@ -331,37 +509,3 @@ By being able to see how each county compares with each other on a local and sta
 | United States Census Bureau. (2024). *Annual Resident Population Estimates, Estimated Components of Resident Population Change, and Rates*
 |      *of the Components of Resident Population Change for States and Counties: April 1, 2020 to July 1, 2023* [Data set]. United States Census
 |      Bureau. [https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html).
-
-```{r Correlation}
-cor1 <- cor(covid_healthcarecosts$cases_per_100k_2021, covid_healthcarecosts$avg_cost_2022)
-print(cor1)
-cor2 <- cor(covid_healthcarecosts$cases_per_100k_2022, covid_healthcarecosts$avg_cost_2022)
-print(cor2)
-
-cor3 <- cor(covid_healthcarecosts$rank2021case, covid_healthcarecosts$rank2022cost)
-print(cor3)
-cor4 <- cor(covid_healthcarecosts$rank2022case, covid_healthcarecosts$rank2022cost)
-print(cor4)
-
-```
-
-```{r analysis}
-
-mlr <- lm(avg_cost_2022 ~ cases_per_100k_2021 * cases_per_100k_2022, data = covid_healthcarecosts)
-summary(mlr)
-
-covid_healthcarecosts %>% 
-  mutate(rank2021case = factor(rank2021case),
-         rank2022case = factor(rank2022case))
-
-mlr_rank <- lm(avg_cost_2022 ~ rank2021case * rank2022case, data = covid_healthcarecosts)
-summary (mlr_rank)
-
-model <- aov(avg_cost_2022 ~ rank2021case * rank2022case, data = covid_healthcarecosts)
-summary(model)
-
-```
-
-
-
-
