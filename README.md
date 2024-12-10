@@ -1,7 +1,6 @@
 
 # Daily COVID-19 Case Rate as a Predictor for Out-of-pocket Healthcare Costs in Georgia, USA
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/bchiok/engrd302W-EDA-code/HEAD)
-[![Binder](http://mybinder.org/badge_logo.svg)](https://github.com/bchiok/engrd302W-EDA-code/main?urlpath=rstudio)
 
 ## Project Objective
 * View trends in COVID-19 case rate in Georgia (2021 and 2022)
